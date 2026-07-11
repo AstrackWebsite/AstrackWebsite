@@ -52,6 +52,10 @@ export default function SignupPage() {
               <input id="contact_name" name="contact_name" className="field" required />
             </div>
             <div>
+              <label htmlFor="contact_phone" className="label">Contact number</label>
+              <input id="contact_phone" name="contact_phone" type="tel" className="field" />
+            </div>
+            <div>
               <label htmlFor="email" className="label">Work email</label>
               <input id="email" name="email" type="email" autoComplete="email" className="field" required />
             </div>

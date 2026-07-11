@@ -17,6 +17,7 @@ export interface Company {
   status: CompanyStatus;
   contact_name: string | null;
   contact_email: string | null;
+  contact_phone: string | null;
   created_at: string;
 }
 
@@ -61,6 +62,7 @@ export type DocumentKind =
 
 export interface Staff {
   id: string;
+  company_id: string;
   name: string;
   role: StaffRole;
   contact: string | null;
@@ -89,6 +91,7 @@ export interface Client {
 
 export interface Project {
   id: string;
+  company_id: string;
   reference: string;
   address: string;
   classification: ProjectClassification;

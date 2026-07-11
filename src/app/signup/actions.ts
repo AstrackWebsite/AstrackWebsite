@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function requestAccess(_prev: unknown, formData: FormData) {
   const companyName = String(formData.get("company_name") ?? "").trim();
   const contactName = String(formData.get("contact_name") ?? "").trim();
+  const contactPhone = String(formData.get("contact_phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -23,7 +24,11 @@ export async function requestAccess(_prev: unknown, formData: FormData) {
     email,
     password,
     options: {
-      data: { company_name: companyName, contact_name: contactName },
+      data: {
+        company_name: companyName,
+        contact_name: contactName,
+        contact_phone: contactPhone,
+      },
     },
   });
 
