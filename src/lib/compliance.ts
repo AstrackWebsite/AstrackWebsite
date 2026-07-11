@@ -121,6 +121,18 @@ export function fourHourTWA(
   );
 }
 
+/** Duration in hours between two HH:MM time strings (same day). */
+export function durationHours(
+  start: string | null | undefined,
+  end: string | null | undefined
+): number {
+  if (!start || !end) return 0;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const mins = eh * 60 + em - (sh * 60 + sm);
+  return mins > 0 ? mins / 60 : 0;
+}
+
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }

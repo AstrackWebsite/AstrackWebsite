@@ -113,3 +113,51 @@ export interface Plant {
   dop_test_date: string | null;
   created_at: string;
 }
+
+export interface ExposureRecord {
+  id: string;
+  project_id: string;
+  staff_id: string;
+  entry_date: string;
+  task: string | null;
+  asbestos_type: AsbestosType | null;
+  shift1_start: string | null;
+  shift1_end: string | null;
+  shift2_start: string | null;
+  shift2_end: string | null;
+  mask_worn: string | null;
+  mask_service_expiry_at_time: string | null;
+  hours_exposure: number;
+  fibre_level: number;
+  twa_4h: number;
+  created_at: string;
+}
+
+export interface PlantDailyCheck {
+  id: string;
+  project_id: string;
+  plant_id: string;
+  check_date: string;
+  passed: boolean;
+  is_start_of_project: boolean;
+  created_at: string;
+}
+
+export interface AirMonitoringResult {
+  id: string;
+  project_id: string;
+  type: AirMonitoringType;
+  result_fml: number | null;
+  pass: boolean | null;
+  analyst_cert_url: string | null;
+  supervisor_id: string | null;
+  sampled_on: string | null;
+  created_at: string;
+}
+
+export interface ProjectPlant {
+  id: string;
+  project_id: string;
+  plant_id: string;
+  assigned_at: string;
+}

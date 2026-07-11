@@ -1,5 +1,15 @@
 import { createClient } from "./supabase/server";
-import type { Staff, Project, Client, SiteRegisterEntry, StaffRole } from "./types";
+import type {
+  Staff,
+  Project,
+  Client,
+  SiteRegisterEntry,
+  StaffRole,
+  ExposureRecord,
+  Plant,
+  PlantDailyCheck,
+  AirMonitoringResult,
+} from "./types";
 
 /** All non-archived staff, ordered by name. */
 export async function getStaff(): Promise<Staff[]> {
@@ -75,4 +85,80 @@ export async function getRegisterForDate(
 /** id → name lookup for resolving CM/supervisor references. */
 export function staffNameMap(staff: Staff[]): Map<string, string> {
   return new Map(staff.map((s) => [s.id, s.name]));
+}
+
+// ── Exposure ───────────────────────────────────────────────────────────────
+export async function getExposureForProject(
+  projectId: string
+): Promise<ExposureRecord[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("exposure_record")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("entry_date", { ascending: false })
+    .order("created_at");
+  return (data as ExposureRecord[]) ?? [];
+}
+
+export async function getAllExposure(): Promise<ExposureRecord[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("exposure_record")
+    .select("*")
+    .order("entry_date", { ascending: false });
+  return (data as ExposureRecord[]) ?? [];
+}
+
+// ── Plant ────────────────────────────────────────────────────────────────
+export async function getAllPlant(): Promise<Plant[]> {
+  const supabase = createClient();
+  const { data } = await supabase.from("plant").select("*").order("asset_id");
+  return (data as Plant[]) ?? [];
+}
+
+/** Plant assigned to a project (via project_plant). */
+export async function getProjectPlant(projectId: string): Promise<Plant[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_plant")
+    .select("plant(*)")
+    .eq("project_id", projectId);
+  const rows = (data as unknown as { plant: Plant | Plant[] }[]) ?? [];
+  return rows
+    .map((r) => (Array.isArray(r.plant) ? r.plant[0] : r.plant))
+    .filter(Boolean);
+}
+
+export async function getPlantChecks(
+  projectId: string
+): Promise<PlantDailyCheck[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("plant_daily_check")
+    .select("*")
+    .eq("project_id", projectId);
+  return (data as PlantDailyCheck[]) ?? [];
+}
+
+// ── Air monitoring ─────────────────────────────────────────────────────────
+export async function getAirMonitoring(): Promise<AirMonitoringResult[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("air_monitoring_result")
+    .select("*")
+    .order("sampled_on", { ascending: false });
+  return (data as AirMonitoringResult[]) ?? [];
+}
+
+export async function getAirMonitoringForProject(
+  projectId: string
+): Promise<AirMonitoringResult[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("air_monitoring_result")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("sampled_on", { ascending: false });
+  return (data as AirMonitoringResult[]) ?? [];
 }

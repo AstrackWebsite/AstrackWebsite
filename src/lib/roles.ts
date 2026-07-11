@@ -1,4 +1,11 @@
-import type { StaffRole, ProjectStatus, ProjectClassification } from "./types";
+import type {
+  StaffRole,
+  ProjectStatus,
+  ProjectClassification,
+  AsbestosType,
+  AirMonitoringType,
+  PlantType,
+} from "./types";
 
 /** Display order of staff groups on the Staff screen. */
 export const STAFF_ROLE_ORDER: StaffRole[] = [
@@ -58,3 +65,29 @@ export const ACTIVE_PROJECT_STATUSES: ProjectStatus[] = [
   "setup",
   "live",
 ];
+
+export const ASBESTOS_TYPE_LABEL: Record<AsbestosType, string> = {
+  chrysotile: "Chrysotile (white)",
+  amosite: "Amosite (brown)",
+  crocidolite: "Crocidolite (blue)",
+};
+
+export const AIR_MONITORING_TYPE_LABEL: Record<AirMonitoringType, string> = {
+  background: "Background",
+  leak: "Leak",
+  reassurance: "Reassurance",
+  clearance: "Clearance",
+};
+
+export const PLANT_TYPE_LABEL: Record<PlantType, string> = {
+  vacuum: "M-Class Vacuum",
+  dcu: "Decontamination Unit (DCU)",
+  npu: "Negative Pressure Unit (NPU)",
+  smoke_machine: "Smoke Machine",
+  lead_110v: "Lead (110v)",
+  transformer: "Transformer",
+  other: "Other plant",
+};
+
+/** Plant types that gate a Licensed project (start-of-project + daily checks). */
+export const GATED_PLANT_TYPES: PlantType[] = ["dcu", "vacuum", "npu"];

@@ -5,16 +5,22 @@ import {
   getClient,
   getStaff,
   getRegisterForDate,
+  getExposureForProject,
+  getProjectPlant,
+  getPlantChecks,
   staffNameMap,
 } from "@/lib/data";
 import { SiteRegister, type RegisterRow, type AvailableStaff } from "@/components/SiteRegister";
-import { PhaseStub } from "@/components/PageStub";
+import { ExposureCapture, type ExposureRow, type Operative } from "@/components/ExposureCapture";
+import { PlantChecks, type PlantRow, type PlantGate } from "@/components/PlantChecks";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
   CLASSIFICATION_LABEL,
   STAFF_ROLE_SHORT,
+  GATED_PLANT_TYPES,
 } from "@/lib/roles";
+import { isExpired, isExpiringSoon } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +34,13 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client] = await Promise.all([
+  const [staff, register, client, exposure, plant, plantChecks] = await Promise.all([
     getStaff(),
     getRegisterForDate(project.id, today),
     project.client_id ? getClient(project.client_id) : Promise.resolve(null),
+    getExposureForProject(project.id),
+    getProjectPlant(project.id),
+    getPlantChecks(project.id),
   ]);
 
   const names = staffNameMap(staff);
@@ -55,6 +64,49 @@ export default async function ProjectWorkspacePage({
   const available: AvailableStaff[] = staff
     .filter((s) => !onRegister.has(s.id))
     .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+
+  // Exposure — operatives on site today (checked in, not blocked) can be logged.
+  const operatives: Operative[] = register
+    .filter((e) => e.check_in && !e.blocked)
+    .map((e) => ({ id: e.staff_id, name: byId.get(e.staff_id)?.name ?? "Unknown" }));
+  const exposureRows: ExposureRow[] = exposure.map((e) => ({
+    id: e.id,
+    staffId: e.staff_id,
+    name: byId.get(e.staff_id)?.name ?? "Unknown",
+    entryDate: e.entry_date,
+    task: e.task,
+    asbestos: e.asbestos_type,
+    mask: e.mask_worn,
+    hours: e.hours_exposure,
+    fibre: e.fibre_level,
+    twa: e.twa_4h,
+  }));
+
+  // Plant checks + licensed gate (Rule 5).
+  const checkedTodayIds = new Set(
+    plantChecks.filter((c) => c.check_date === today).map((c) => c.plant_id)
+  );
+  const startedIds = new Set(
+    plantChecks.filter((c) => c.is_start_of_project).map((c) => c.plant_id)
+  );
+  const plantRows: PlantRow[] = plant.map((p) => ({
+    id: p.id,
+    assetId: p.asset_id,
+    name: p.name,
+    type: p.type,
+    certExpiry: p.cert_expiry,
+    certExpired: isExpired(p.cert_expiry),
+    certExpiring: isExpiringSoon(p.cert_expiry),
+    gated: GATED_PLANT_TYPES.includes(p.type),
+    checkedToday: checkedTodayIds.has(p.id),
+  }));
+  const gatedPlant = plant.filter((p) => GATED_PLANT_TYPES.includes(p.type));
+  const gate: PlantGate = {
+    licensed: project.classification === "licensed",
+    requiredCount: gatedPlant.length,
+    startComplete: gatedPlant.every((p) => startedIds.has(p.id)),
+    todayComplete: gatedPlant.every((p) => checkedTodayIds.has(p.id)),
+  };
 
   return (
     <>
@@ -104,12 +156,14 @@ export default async function ProjectWorkspacePage({
       </section>
 
       {/* Site register with cert-blocking */}
-      <SiteRegister projectId={project.id} rows={rows} available={available} />
-
-      {/* Phase D placeholders */}
-      <div className="mt-4 space-y-4 opacity-90">
-        <PhaseStub title="RPE Daily Checks" phase="Phase D" note="Daily RPE checks, linked to each operative and their mask, arrive in Phase D." />
-        <PhaseStub title="Plant & Equipment" phase="Phase D" note="Daily plant checks and the Licensed-project gate arrive in Phase D." />
+      <div className="space-y-4">
+        <SiteRegister projectId={project.id} rows={rows} available={available} />
+        <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
+        <ExposureCapture
+          projectId={project.id}
+          operatives={operatives}
+          records={exposureRows}
+        />
       </div>
     </>
   );
