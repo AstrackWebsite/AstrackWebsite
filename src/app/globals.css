@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-surface-muted text-ink antialiased;
+}
+
+@layer components {
+  /* White card — the core surface of the app */
+  .card {
+    @apply rounded-card bg-surface shadow-card border border-surface-border;
+  }
+
+  /* Primary action button — navy, large tap target */
+  .btn-primary {
+    @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
+           bg-navy-600 px-5 py-3 text-base font-semibold text-white
+           transition-colors active:bg-navy-700 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
+           border border-surface-border bg-surface px-5 py-3 text-base
+           font-semibold text-navy-600 transition-colors active:bg-surface-muted;
+  }
+
+  /* Text input — big, high contrast */
+  .field {
+    @apply min-h-tap w-full rounded-lg border border-surface-border bg-surface
+           px-4 py-3 text-base text-ink placeholder:text-ink-faint
+           focus:border-navy-500 focus:outline-none focus:ring-2 focus:ring-navy-200;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink-muted;
+  }
+
+  /* Status pills */
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .pill-danger {
+    @apply bg-danger-100 text-danger-700;
+  }
+  .pill-warn {
+    @apply bg-warn-100 text-warn-700;
+  }
+  .pill-ok {
+    @apply bg-ok-100 text-ok-700;
+  }
+  .pill-neutral {
+    @apply bg-navy-100 text-navy-700;
+  }
+}
