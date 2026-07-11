@@ -19,15 +19,13 @@ export default function SignupPage() {
   const [state, formAction] = useFormState(requestAccess, initialState);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-navy-600 px-6 py-10">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-navy-700 to-navy-800 px-6 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <BrandMark size={56} />
           <div>
             <h1 className="text-2xl font-bold text-white">Request access</h1>
-            <p className="text-sm text-navy-100">
-              Set up your company on ART Asbestos
-            </p>
+            <p className="text-sm text-navy-100">Set up your company on AsTrack</p>
           </div>
         </div>
 

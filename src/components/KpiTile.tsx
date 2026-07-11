@@ -19,7 +19,7 @@ export function KpiTile({
     tone === "danger"
       ? "text-danger-600"
       : tone === "value"
-        ? "text-navy-600"
+        ? "text-accent-600"
         : "text-ink";
 
   const inner = (

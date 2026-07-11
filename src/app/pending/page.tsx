@@ -11,7 +11,7 @@ export default async function PendingPage() {
   if (company?.status === "active") redirect("/dashboard");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-navy-600 px-6 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-navy-700 to-navy-800 px-6 text-center">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <BrandMark size={56} />

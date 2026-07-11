@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "ART Asbestos",
+  title: "AsTrack — Asbestos compliance, tracked",
   description:
     "Digital site-compliance platform for licensed asbestos removal.",
 };

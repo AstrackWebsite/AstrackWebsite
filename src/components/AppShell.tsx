@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "@/lib/nav";
-import { BrandMark } from "./Brand";
+import { BrandMark, AsTrackWordmark } from "./Brand";
 import { signOut } from "@/app/login/actions";
 
 export function AppShell({
@@ -36,7 +36,7 @@ export function AppShell({
         <div className="flex min-w-0 items-center gap-2">
           <BrandMark size={30} />
           <span className="truncate text-base font-semibold tracking-tight">
-            {companyName ?? "ART Asbestos"}
+            {companyName ?? "AsTrack"}
           </span>
         </div>
       </header>
@@ -58,7 +58,7 @@ export function AppShell({
         <div className="flex h-14 items-center justify-between bg-navy-600 px-4 text-white">
           <div className="flex items-center gap-2">
             <BrandMark size={30} />
-            <span className="font-semibold">ART Asbestos</span>
+            <AsTrackWordmark onDark size={18} />
           </div>
           <button
             type="button"
@@ -102,7 +102,7 @@ export function AppShell({
                       onClick={() => setOpen(false)}
                       className={`flex min-h-tap items-center px-4 py-3 text-base font-medium ${
                         active
-                          ? "border-l-4 border-navy-600 bg-navy-50 text-navy-700"
+                          ? "border-l-4 border-accent-500 bg-accent-50 text-navy-700"
                           : "border-l-4 border-transparent text-ink active:bg-surface-muted"
                       }`}
                     >
