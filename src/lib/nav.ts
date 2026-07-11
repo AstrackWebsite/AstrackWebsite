@@ -22,12 +22,12 @@ export const NAV: NavSection[] = [
       { label: "Personal Monitoring", href: "/personal-monitoring" },
       { label: "Accident & Incident", href: "/incidents" },
       { label: "Audits", href: "/audits" },
+      { label: "Project Planner", href: "/project-planner" },
     ],
   },
   {
     heading: "Coming later",
     items: [
-      { label: "Project Planner", href: "/project-planner", placeholder: true },
       { label: "Client Portal", href: "/client-portal", placeholder: true },
     ],
   },
