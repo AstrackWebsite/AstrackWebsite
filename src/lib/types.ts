@@ -88,6 +88,18 @@ export interface Project {
   updated_at: string;
 }
 
+export interface SiteRegisterEntry {
+  id: string;
+  project_id: string;
+  staff_id: string;
+  entry_date: string;
+  check_in: string | null;
+  check_out: string | null;
+  blocked: boolean;
+  block_reason: string | null;
+  created_at: string;
+}
+
 export interface Plant {
   id: string;
   asset_id: string;

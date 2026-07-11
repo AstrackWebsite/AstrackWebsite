@@ -38,6 +38,11 @@ export function formatDay(date: string | null | undefined): string {
   });
 }
 
+/** Today's date as an ISO date string (YYYY-MM-DD). */
+export function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /** Time of day from a timestamp, e.g. 07:42. */
 export function formatTime(ts: string | null | undefined): string {
   if (!ts) return "—";
