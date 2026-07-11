@@ -5,10 +5,6 @@
 
 begin;
 
--- Disable triggers for this session so we can backfill append-only evidence
--- tables. (Requires the postgres/owner role — true in the Supabase SQL editor.)
-set session_replication_role = replica;
-
 -- ── Company (tenant) ─────────────────────────────────────────────────────
 create type company_status as enum ('pending','active','suspended');
 
@@ -42,6 +38,14 @@ alter table project_closeout      add column company_id uuid references company(
 insert into company (name, status, contact_email)
 values ('ART Asbestos', 'active', 'demo@artasbestos.co.uk');
 
+-- Temporarily lift the append-only guards so evidence rows can be backfilled.
+-- (Owner-level ALTER TABLE — works with Supabase's postgres role.)
+alter table exposure_record       disable trigger no_upd;
+alter table air_monitoring_result disable trigger no_upd;
+alter table plant_daily_check     disable trigger no_upd;
+alter table document              disable trigger no_upd;
+alter table site_register_entry   disable trigger reg_upd;
+
 update staff                 set company_id = (select id from company where name='ART Asbestos');
 update client                set company_id = (select id from company where name='ART Asbestos');
 update project               set company_id = (select id from company where name='ART Asbestos');
@@ -57,6 +61,13 @@ update project_closeout      set company_id = (select id from company where name
 -- Existing login(s) join the demo company and become the platform owner
 update profiles set company_id = (select id from company where name='ART Asbestos'),
                     is_platform_admin = true;
+
+-- Restore the append-only guards
+alter table exposure_record       enable trigger no_upd;
+alter table air_monitoring_result enable trigger no_upd;
+alter table plant_daily_check     enable trigger no_upd;
+alter table document              enable trigger no_upd;
+alter table site_register_entry   enable trigger reg_upd;
 
 -- Now enforce NOT NULL
 alter table staff                 alter column company_id set not null;
@@ -199,7 +210,5 @@ create policy air_write on air_monitoring_result for insert to authenticated wit
 create policy close_read   on project_closeout for select to authenticated using (company_id = current_company_id() or is_platform_admin());
 create policy close_write  on project_closeout for insert to authenticated with check (is_management() and company_id = current_company_id());
 create policy close_update on project_closeout for update to authenticated using (company_id = current_company_id() and is_management()) with check (company_id = current_company_id() and is_management());
-
-set session_replication_role = default;
 
 commit;

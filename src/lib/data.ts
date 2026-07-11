@@ -1,4 +1,6 @@
 import { createClient } from "./supabase/server";
+import { hasExpiredCert } from "./compliance";
+import { ACTIVE_PROJECT_STATUSES } from "./roles";
 import type {
   Staff,
   Project,
@@ -57,6 +59,43 @@ export async function getCompanies(): Promise<Company[]> {
     .select("*")
     .order("created_at", { ascending: false });
   return (data as Company[]) ?? [];
+}
+
+export interface CompanyOverview {
+  company: Company;
+  staffCount: number;
+  projectCount: number;
+  activeProjectCount: number;
+  turnover: number;
+  flags: number;
+}
+
+/**
+ * Platform-admin CRM data. A platform admin sees every company's staff and
+ * projects (RLS allows it), so we aggregate per-company metrics here.
+ */
+export async function getPlatformOverview(): Promise<CompanyOverview[]> {
+  const [companies, staff, projects] = await Promise.all([
+    getCompanies(),
+    getStaff(),
+    getProjects(),
+  ]);
+
+  const now = new Date();
+  return companies.map((company) => {
+    const cStaff = staff.filter((s) => s.company_id === company.id);
+    const cProjects = projects.filter((p) => p.company_id === company.id);
+    return {
+      company,
+      staffCount: cStaff.length,
+      projectCount: cProjects.length,
+      activeProjectCount: cProjects.filter((p) =>
+        ACTIVE_PROJECT_STATUSES.includes(p.status)
+      ).length,
+      turnover: cProjects.reduce((sum, p) => sum + (p.contract_value ?? 0), 0),
+      flags: cStaff.filter((s) => hasExpiredCert(s, now)).length,
+    };
+  });
 }
 
 /** All non-archived staff, ordered by name. */
