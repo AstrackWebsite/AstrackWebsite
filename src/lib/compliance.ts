@@ -59,6 +59,44 @@ export function hasExpiredCert(staff: Staff, on: Date = new Date()): boolean {
   return staffCertDates(staff).some((d) => isExpired(d, on));
 }
 
+/** Human labels for the expiry-tracked cert columns. */
+const CERT_LABELS: { key: keyof Staff; label: string }[] = [
+  { key: "medical_expiry", label: "Medical" },
+  { key: "face_fit_expiry", label: "Face fit" },
+  { key: "mask_service_expiry", label: "Mask service" },
+  { key: "asbestos_training_expiry", label: "Asbestos training" },
+  { key: "smsts_expiry", label: "SMSTS" },
+  { key: "sssts_expiry", label: "SSSTS" },
+  { key: "cm_training_expiry", label: "CM training" },
+];
+
+export type CertLevel = "expired" | "expiring" | "valid";
+
+export interface CertStatus {
+  level: CertLevel;
+  /** Short status line for the staff row, e.g. "Face fit expired". */
+  label: string;
+  /** The offending cert's date, if any. */
+  date: string | null;
+}
+
+/**
+ * Worst-case cert status for a staff member, for at-a-glance list display.
+ * Expired beats expiring beats valid.
+ */
+export function staffCertStatus(staff: Staff, on: Date = new Date()): CertStatus {
+  const present = CERT_LABELS.filter((c) => staff[c.key]);
+  const expired = present.find((c) => isExpired(staff[c.key] as string, on));
+  if (expired) {
+    return { level: "expired", label: `${expired.label} expired`, date: staff[expired.key] as string };
+  }
+  const expiring = present.find((c) => isExpiringSoon(staff[c.key] as string, 30, on));
+  if (expiring) {
+    return { level: "expiring", label: `${expiring.label} expiring`, date: staff[expiring.key] as string };
+  }
+  return { level: "valid", label: "All certs valid", date: null };
+}
+
 // ── 4-hour TWA (Rule 4) ──────────────────────────────────────────────────
 export const CONTROL_LIMIT_FML = 0.1; // f/ml, CAR 2012 control limit
 
