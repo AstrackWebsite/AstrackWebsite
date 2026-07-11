@@ -9,6 +9,7 @@ import type {
   Plant,
   PlantDailyCheck,
   AirMonitoringResult,
+  ProjectCloseout,
 } from "./types";
 
 /** All non-archived staff, ordered by name. */
@@ -65,6 +66,19 @@ export async function getStaffByRole(role: StaffRole): Promise<Staff[]> {
     .eq("archived", false)
     .order("name");
   return (data as Staff[]) ?? [];
+}
+
+/** All site-register entries for a project (all dates) — for the closeout pack. */
+export async function getRegisterForProject(
+  projectId: string
+): Promise<SiteRegisterEntry[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_register_entry")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("entry_date");
+  return (data as SiteRegisterEntry[]) ?? [];
 }
 
 /** Today's site-register entries for a project. */
@@ -161,4 +175,17 @@ export async function getAirMonitoringForProject(
     .eq("project_id", projectId)
     .order("sampled_on", { ascending: false });
   return (data as AirMonitoringResult[]) ?? [];
+}
+
+// ── Closeout ───────────────────────────────────────────────────────────────
+export async function getCloseout(
+  projectId: string
+): Promise<ProjectCloseout | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_closeout")
+    .select("*")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  return (data as ProjectCloseout) ?? null;
 }

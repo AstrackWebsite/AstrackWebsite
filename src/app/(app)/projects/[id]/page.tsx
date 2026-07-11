@@ -164,6 +164,10 @@ export default async function ProjectWorkspacePage({
           operatives={operatives}
           records={exposureRows}
         />
+
+        <Link href={`/projects/${project.id}/closeout`} className="btn-primary w-full">
+          {project.status === "completed" ? "View closeout pack" : "Project closeout →"}
+        </Link>
       </div>
     </>
   );

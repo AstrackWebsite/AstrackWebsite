@@ -161,3 +161,19 @@ export interface ProjectPlant {
   plant_id: string;
   assigned_at: string;
 }
+
+export interface ProjectCloseout {
+  id: string;
+  project_id: string;
+  plan_of_work_delivered: boolean;
+  air_monitoring_complete: boolean;
+  four_stage_clearance_commenced: boolean;
+  cert_reoccupation_received: boolean;
+  site_clearance_confirmed: boolean;
+  documentation_confirmed: boolean;
+  client_rating: number | null;
+  client_comments: string | null;
+  closeout_pdf_url: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
