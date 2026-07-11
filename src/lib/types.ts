@@ -183,6 +183,18 @@ export interface ProjectPlant {
   assigned_at: string;
 }
 
+export interface Audit {
+  id: string;
+  company_id: string;
+  project_id: string | null;
+  auditor_staff_id: string | null;
+  audit_date: string;
+  score: number | null;
+  responses: { category: string; label: string; result: "pass" | "fail" | "na" }[];
+  notes: string | null;
+  created_at: string;
+}
+
 export type IncidentType =
   | "injury"
   | "near_miss"

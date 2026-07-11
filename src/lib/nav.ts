@@ -21,6 +21,7 @@ export const NAV: NavSection[] = [
       { label: "Air Monitoring", href: "/air-monitoring" },
       { label: "Personal Monitoring", href: "/personal-monitoring" },
       { label: "Accident & Incident", href: "/incidents" },
+      { label: "Audits", href: "/audits" },
     ],
   },
   {
@@ -28,7 +29,6 @@ export const NAV: NavSection[] = [
     items: [
       { label: "Project Planner", href: "/project-planner", placeholder: true },
       { label: "Client Portal", href: "/client-portal", placeholder: true },
-      { label: "Audits", href: "/audits", placeholder: true },
     ],
   },
 ];

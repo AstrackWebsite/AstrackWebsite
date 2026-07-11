@@ -15,6 +15,7 @@ import type {
   Company,
   Profile,
   Incident,
+  Audit,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -262,6 +263,22 @@ export async function getAirMonitoringForProject(
     .eq("project_id", projectId)
     .order("sampled_on", { ascending: false });
   return (data as AirMonitoringResult[]) ?? [];
+}
+
+// ── Audits ─────────────────────────────────────────────────────────────────
+export async function getAudits(): Promise<Audit[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("audit")
+    .select("*")
+    .order("audit_date", { ascending: false });
+  return (data as Audit[]) ?? [];
+}
+
+export async function getAudit(id: string): Promise<Audit | null> {
+  const supabase = createClient();
+  const { data } = await supabase.from("audit").select("*").eq("id", id).single();
+  return (data as Audit) ?? null;
 }
 
 // ── Incidents ────────────────────────────────────────────────────────────
