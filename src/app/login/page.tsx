@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { signIn } from "./actions";
-import { BrandMark } from "@/components/Brand";
+import { BrandMark, AsTrackWordmark } from "@/components/Brand";
 
 const initialState: { error?: string } = {};
 
@@ -19,13 +19,13 @@ export default function LoginPage() {
   const [state, formAction] = useFormState(signIn, initialState);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-navy-600 px-6">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-navy-700 to-navy-800 px-6">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <BrandMark size={64} />
           <div>
-            <h1 className="text-2xl font-bold text-white">ART Asbestos</h1>
-            <p className="text-sm text-navy-100">Site compliance platform</p>
+            <AsTrackWordmark onDark size={28} className="block" />
+            <p className="mt-1 text-sm text-navy-100">Site compliance platform</p>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export default function LoginPage() {
               autoComplete="email"
               inputMode="email"
               className="field"
-              placeholder="you@artasbestos.co.uk"
+              placeholder="you@yourcompany.co.uk"
               required
             />
           </div>
@@ -76,6 +76,13 @@ export default function LoginPage() {
             Forgot password?
           </button>
         </form>
+
+        <p className="mt-5 text-center text-sm text-navy-100">
+          New contractor?{" "}
+          <a href="/signup" className="font-semibold text-white underline">
+            Request access
+          </a>
+        </p>
 
         <p className="mt-6 text-center text-xs text-navy-200">
           HSE-licensed · CAR 2012 compliant by design

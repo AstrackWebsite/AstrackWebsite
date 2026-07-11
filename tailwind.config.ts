@@ -27,6 +27,18 @@ const config: Config = {
           800: "#0f2338",
           900: "#0a1826",
         },
+        // AsTrack brand accent — teal. Used for logo, links, active states,
+        // highlights. Distinct from danger red.
+        accent: {
+          50: "#f0fdfa",
+          100: "#ccfbf1",
+          200: "#99f6e4",
+          400: "#2dd4bf",
+          500: "#14b8a6",
+          600: "#0d9488",
+          700: "#0f766e",
+          800: "#115e59",
+        },
         // Status colours — red used ONLY for expired/blocked/fault
         danger: {
           50: "#fef2f2",

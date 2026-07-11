@@ -10,7 +10,54 @@ import type {
   PlantDailyCheck,
   AirMonitoringResult,
   ProjectCloseout,
+  Company,
+  Profile,
 } from "./types";
+
+/** The signed-in user, their profile (tenant + role) and their company. */
+export async function getMyContext(): Promise<{
+  user: { id: string; email: string | null } | null;
+  profile: Profile | null;
+  company: Company | null;
+}> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { user: null, profile: null, company: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, company_id, app_role, is_platform_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  let company: Company | null = null;
+  if (profile?.company_id) {
+    const { data } = await supabase
+      .from("company")
+      .select("*")
+      .eq("id", profile.company_id)
+      .maybeSingle();
+    company = (data as Company) ?? null;
+  }
+
+  return {
+    user: { id: user.id, email: user.email ?? null },
+    profile: (profile as Profile) ?? null,
+    company,
+  };
+}
+
+/** All companies (platform-admin only — RLS enforces). Pending first. */
+export async function getCompanies(): Promise<Company[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("company")
+    .select("*")
+    .order("created_at", { ascending: false });
+  return (data as Company[]) ?? [];
+}
 
 /** All non-archived staff, ordered by name. */
 export async function getStaff(): Promise<Staff[]> {

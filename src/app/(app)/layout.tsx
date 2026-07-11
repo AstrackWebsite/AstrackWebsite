@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getMyContext } from "@/lib/data";
 import { AppShell } from "@/components/AppShell";
 
 export default async function AppLayout({
@@ -7,12 +7,19 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, profile, company } = await getMyContext();
 
   if (!user) redirect("/login");
+  // No company yet, or awaiting approval → hold at the pending screen.
+  if (!company || company.status !== "active") redirect("/pending");
 
-  return <AppShell userEmail={user.email ?? ""}>{children}</AppShell>;
+  return (
+    <AppShell
+      userEmail={user.email ?? ""}
+      companyName={company.name}
+      isPlatformAdmin={profile?.is_platform_admin ?? false}
+    >
+      {children}
+    </AppShell>
+  );
 }

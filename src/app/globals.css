@@ -34,6 +34,18 @@ body {
            font-semibold text-navy-600 transition-colors active:bg-surface-muted;
   }
 
+  /* Teal brand CTA — used for primary marketing actions */
+  .btn-accent {
+    @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
+           bg-accent-600 px-5 py-3 text-base font-semibold text-white
+           transition-colors hover:bg-accent-700 active:bg-accent-700
+           disabled:opacity-50;
+  }
+
+  .link-accent {
+    @apply font-semibold text-accent-600 hover:text-accent-700;
+  }
+
   /* Text input — big, high contrast */
   .field {
     @apply min-h-tap w-full rounded-lg border border-surface-border bg-surface

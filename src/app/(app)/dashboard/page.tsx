@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/PageStub";
 import { KpiTile } from "@/components/KpiTile";
-import { getStaff, getProjects, staffNameMap } from "@/lib/data";
+import { getStaff, getProjects, staffNameMap, getMyContext } from "@/lib/data";
 import { hasExpiredCert } from "@/lib/compliance";
 import { ACTIVE_PROJECT_STATUSES, PROJECT_STATUS_LABEL, PROJECT_STATUS_PILL } from "@/lib/roles";
 import { gbpCompact, formatDay } from "@/lib/format";
@@ -9,7 +9,11 @@ import { gbpCompact, formatDay } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [staff, projects] = await Promise.all([getStaff(), getProjects()]);
+  const [staff, projects, ctx] = await Promise.all([
+    getStaff(),
+    getProjects(),
+    getMyContext(),
+  ]);
   const names = staffNameMap(staff);
 
   const activeProjects = projects.filter((p) =>
@@ -23,7 +27,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Overview" subtitle="ART Asbestos" />
+      <PageHeader title="Overview" subtitle={ctx.company?.name ?? undefined} />
 
       <div className="grid grid-cols-2 gap-3">
         <KpiTile value={staff.length} label="Staff" href="/staff" />

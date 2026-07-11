@@ -4,15 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "@/lib/nav";
-import { BrandMark } from "./Brand";
+import { BrandMark, AsTrackWordmark } from "./Brand";
 import { signOut } from "@/app/login/actions";
 
 export function AppShell({
   children,
   userEmail,
+  companyName,
+  isPlatformAdmin = false,
 }: {
   children: React.ReactNode;
   userEmail: string;
+  companyName?: string;
+  isPlatformAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -29,10 +33,10 @@ export function AppShell({
         >
           <HamburgerIcon />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <BrandMark size={30} />
-          <span className="text-base font-semibold tracking-tight">
-            ART Asbestos
+          <span className="truncate text-base font-semibold tracking-tight">
+            {companyName ?? "AsTrack"}
           </span>
         </div>
       </header>
@@ -54,7 +58,7 @@ export function AppShell({
         <div className="flex h-14 items-center justify-between bg-navy-600 px-4 text-white">
           <div className="flex items-center gap-2">
             <BrandMark size={30} />
-            <span className="font-semibold">ART Asbestos</span>
+            <AsTrackWordmark onDark size={18} />
           </div>
           <button
             type="button"
@@ -98,7 +102,7 @@ export function AppShell({
                       onClick={() => setOpen(false)}
                       className={`flex min-h-tap items-center px-4 py-3 text-base font-medium ${
                         active
-                          ? "border-l-4 border-navy-600 bg-navy-50 text-navy-700"
+                          ? "border-l-4 border-accent-500 bg-accent-50 text-navy-700"
                           : "border-l-4 border-transparent text-ink active:bg-surface-muted"
                       }`}
                     >
@@ -109,6 +113,23 @@ export function AppShell({
               </div>
             ))}
           </div>
+
+          {/* Platform admin (owner only) */}
+          {isPlatformAdmin && (
+            <div className="border-t border-surface-border px-2 py-2">
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className={`flex min-h-tap items-center rounded-lg px-2 text-base font-medium ${
+                  pathname.startsWith("/admin")
+                    ? "bg-navy-50 text-navy-700"
+                    : "text-ink active:bg-surface-muted"
+                }`}
+              >
+                Platform admin
+              </Link>
+            </div>
+          )}
 
           {/* Footer: user + sign out */}
           <div className="border-t border-surface-border p-4">
