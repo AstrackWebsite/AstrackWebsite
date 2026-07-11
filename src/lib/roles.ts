@@ -5,6 +5,9 @@ import type {
   AsbestosType,
   AirMonitoringType,
   PlantType,
+  IncidentType,
+  IncidentStatus,
+  IncidentSeverity,
 } from "./types";
 
 /** Display order of staff groups on the Staff screen. */
@@ -91,3 +94,45 @@ export const PLANT_TYPE_LABEL: Record<PlantType, string> = {
 
 /** Plant types that gate a Licensed project (start-of-project + daily checks). */
 export const GATED_PLANT_TYPES: PlantType[] = ["dcu", "vacuum", "npu"];
+
+// ── Incidents ────────────────────────────────────────────────────────────
+export const INCIDENT_TYPE_LABEL: Record<IncidentType, string> = {
+  injury: "Injury",
+  near_miss: "Near miss",
+  fibre_release: "Uncontrolled fibre release",
+  dangerous_occurrence: "Dangerous occurrence",
+  equipment_failure: "Equipment failure",
+  fault: "Equipment fault",
+  other: "Other",
+};
+
+/** Types that are (or are likely) RIDDOR-reportable — used to auto-flag. */
+export const RIDDOR_SUGGEST_TYPES: IncidentType[] = [
+  "injury",
+  "fibre_release",
+  "dangerous_occurrence",
+];
+
+export const INCIDENT_STATUS_LABEL: Record<IncidentStatus, string> = {
+  open: "Open",
+  investigating: "Investigating",
+  closed: "Closed",
+};
+
+export const INCIDENT_STATUS_PILL: Record<IncidentStatus, string> = {
+  open: "pill-danger",
+  investigating: "pill-warn",
+  closed: "pill-ok",
+};
+
+export const INCIDENT_SEVERITY_LABEL: Record<IncidentSeverity, string> = {
+  minor: "Minor",
+  moderate: "Moderate",
+  serious: "Serious",
+};
+
+/** Equipment-related incident types link to a plant asset. */
+export const PLANT_LINKED_INCIDENT_TYPES: IncidentType[] = [
+  "equipment_failure",
+  "fault",
+];

@@ -183,6 +183,36 @@ export interface ProjectPlant {
   assigned_at: string;
 }
 
+export type IncidentType =
+  | "injury"
+  | "near_miss"
+  | "fibre_release"
+  | "dangerous_occurrence"
+  | "equipment_failure"
+  | "fault"
+  | "other";
+
+export type IncidentStatus = "open" | "investigating" | "closed";
+export type IncidentSeverity = "minor" | "moderate" | "serious";
+
+export interface Incident {
+  id: string;
+  company_id: string;
+  project_id: string | null;
+  plant_id: string | null;
+  type: IncidentType;
+  title: string;
+  description: string | null;
+  occurred_at: string;
+  location: string | null;
+  severity: IncidentSeverity | null;
+  riddor_reportable: boolean;
+  reported_by_staff_id: string | null;
+  status: IncidentStatus;
+  investigation_outcome: string | null;
+  created_at: string;
+}
+
 export interface ProjectCloseout {
   id: string;
   project_id: string;

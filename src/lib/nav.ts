@@ -20,6 +20,7 @@ export const NAV: NavSection[] = [
       { label: "Plant & Equipment", href: "/plant" },
       { label: "Air Monitoring", href: "/air-monitoring" },
       { label: "Personal Monitoring", href: "/personal-monitoring" },
+      { label: "Accident & Incident", href: "/incidents" },
     ],
   },
   {
@@ -27,13 +28,7 @@ export const NAV: NavSection[] = [
     items: [
       { label: "Project Planner", href: "/project-planner", placeholder: true },
       { label: "Client Portal", href: "/client-portal", placeholder: true },
-      {
-        label: "Accident & Incident",
-        href: "/incidents",
-        placeholder: true,
-      },
       { label: "Audits", href: "/audits", placeholder: true },
-      { label: "Fault Reporting", href: "/faults", placeholder: true },
     ],
   },
 ];
