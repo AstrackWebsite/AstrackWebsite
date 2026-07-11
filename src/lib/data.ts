@@ -14,6 +14,7 @@ import type {
   ProjectCloseout,
   Company,
   Profile,
+  Incident,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -261,6 +262,22 @@ export async function getAirMonitoringForProject(
     .eq("project_id", projectId)
     .order("sampled_on", { ascending: false });
   return (data as AirMonitoringResult[]) ?? [];
+}
+
+// ── Incidents ────────────────────────────────────────────────────────────
+export async function getIncidents(): Promise<Incident[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("incident")
+    .select("*")
+    .order("occurred_at", { ascending: false });
+  return (data as Incident[]) ?? [];
+}
+
+export async function getIncident(id: string): Promise<Incident | null> {
+  const supabase = createClient();
+  const { data } = await supabase.from("incident").select("*").eq("id", id).single();
+  return (data as Incident) ?? null;
 }
 
 // ── Closeout ───────────────────────────────────────────────────────────────
