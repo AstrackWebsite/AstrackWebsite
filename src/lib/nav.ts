@@ -14,7 +14,7 @@ export interface NavSection {
 export const NAV: NavSection[] = [
   {
     items: [
-      { label: "Dashboard", href: "/" },
+      { label: "Dashboard", href: "/dashboard" },
       { label: "Staff", href: "/staff" },
       { label: "Projects", href: "/projects" },
       { label: "Plant & Equipment", href: "/plant" },

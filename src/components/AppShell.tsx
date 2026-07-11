@@ -10,9 +10,13 @@ import { signOut } from "@/app/login/actions";
 export function AppShell({
   children,
   userEmail,
+  companyName,
+  isPlatformAdmin = false,
 }: {
   children: React.ReactNode;
   userEmail: string;
+  companyName?: string;
+  isPlatformAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -29,10 +33,10 @@ export function AppShell({
         >
           <HamburgerIcon />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <BrandMark size={30} />
-          <span className="text-base font-semibold tracking-tight">
-            ART Asbestos
+          <span className="truncate text-base font-semibold tracking-tight">
+            {companyName ?? "ART Asbestos"}
           </span>
         </div>
       </header>
@@ -109,6 +113,23 @@ export function AppShell({
               </div>
             ))}
           </div>
+
+          {/* Platform admin (owner only) */}
+          {isPlatformAdmin && (
+            <div className="border-t border-surface-border px-2 py-2">
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className={`flex min-h-tap items-center rounded-lg px-2 text-base font-medium ${
+                  pathname.startsWith("/admin")
+                    ? "bg-navy-50 text-navy-700"
+                    : "text-ink active:bg-surface-muted"
+                }`}
+              >
+                Platform admin
+              </Link>
+            </div>
+          )}
 
           {/* Footer: user + sign out */}
           <div className="border-t border-surface-border p-4">

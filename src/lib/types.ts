@@ -9,6 +9,24 @@ export type StaffRole =
 
 export type AppRole = "admin" | "management" | "site";
 
+export type CompanyStatus = "pending" | "active" | "suspended";
+
+export interface Company {
+  id: string;
+  name: string;
+  status: CompanyStatus;
+  contact_name: string | null;
+  contact_email: string | null;
+  created_at: string;
+}
+
+export interface Profile {
+  id: string;
+  company_id: string | null;
+  app_role: AppRole;
+  is_platform_admin: boolean;
+}
+
 export type ProjectClassification = "licensed" | "nnlw" | "general";
 
 export type ProjectStatus = "pending" | "setup" | "live" | "completed";

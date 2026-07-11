@@ -77,6 +77,13 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <p className="mt-5 text-center text-sm text-navy-100">
+          New contractor?{" "}
+          <a href="/signup" className="font-semibold text-white underline">
+            Request access
+          </a>
+        </p>
+
         <p className="mt-6 text-center text-xs text-navy-200">
           HSE-licensed · CAR 2012 compliant by design
         </p>

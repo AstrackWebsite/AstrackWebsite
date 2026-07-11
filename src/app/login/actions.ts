@@ -18,7 +18,7 @@ export async function signIn(_prev: unknown, formData: FormData) {
     return { error: "Incorrect email or password." };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function signOut() {
