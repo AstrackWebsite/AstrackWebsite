@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "@/lib/nav";
 import { BrandMark, AsTrackWordmark } from "./Brand";
+import { SyncStatus } from "./SyncStatus";
 import { signOut } from "@/app/login/actions";
 
 export function AppShell({
@@ -56,6 +57,9 @@ export function AppShell({
           <span className="truncate text-base font-semibold tracking-tight">
             {companyName ?? "AsTrack"}
           </span>
+        </div>
+        <div className="ml-auto">
+          <SyncStatus />
         </div>
       </header>
 

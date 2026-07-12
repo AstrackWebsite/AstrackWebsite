@@ -1,0 +1,17 @@
+{
+  "name": "AsTrack — Asbestos compliance",
+  "short_name": "AsTrack",
+  "description": "On-site asbestos compliance capture for licensed removal contractors.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f2338",
+  "theme_color": "#1a3a5c",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

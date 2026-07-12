@@ -10,7 +10,8 @@ import {
 } from "@/lib/compliance";
 import { ASBESTOS_TYPE_LABEL } from "@/lib/roles";
 import { EXPOSURE_TASK_OPTIONS, RPE_OPTIONS } from "@/lib/exposureOptions";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayISO } from "@/lib/format";
+import { enqueue } from "@/lib/offline/outbox";
 import type { AsbestosType } from "@/lib/types";
 
 export interface ExposureRow {
@@ -122,16 +123,63 @@ export function ExposureCapture({
     setOpen(true);
   };
 
+  const [savedOffline, setSavedOffline] = useState(0);
+
   const onSubmit = (formData: FormData) => {
     formData.set("hours_exposure", String(liveHours));
     setError(null);
+
+    // Client-side guard mirrors the server so we never queue an invalid record.
+    const staff = String(formData.get("staff_id") ?? "");
+    const fibreNum = Number(formData.get("fibre_level"));
+    if (!staff) return setError("Choose an operative.");
+    if (!Number.isFinite(fibreNum) || fibreNum < 0)
+      return setError("Enter a valid fibre level (f/ml).");
+    if (liveHours <= 0)
+      return setError("Enter the shift times so exposure hours can be worked out.");
+
+    const queueLocally = () => {
+      const g = (k: string) => {
+        const v = formData.get(k);
+        return v == null ? null : String(v);
+      };
+      enqueue("exposure", projectId, {
+        staff_id: staff,
+        task: g("task"),
+        asbestos_type: g("asbestos_type"),
+        shift1_start: g("shift1_start"),
+        shift1_end: g("shift1_end"),
+        shift2_start: g("shift2_start"),
+        shift2_end: g("shift2_end"),
+        mask_worn: g("mask_worn"),
+        fibre_level: fibreNum,
+        hours_exposure: liveHours,
+        entry_date: todayISO(),
+      });
+      setOpen(false);
+      resetFields();
+      setSavedOffline((n) => n + 1);
+    };
+
+    // No signal → straight to the on-device outbox.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      queueLocally();
+      return;
+    }
+
+    setError(null);
     startTransition(async () => {
-      const res = await addExposure(projectId, formData);
-      if (res?.error) setError(res.error);
-      else {
-        setOpen(false);
-        resetFields();
-        router.refresh();
+      try {
+        const res = await addExposure(projectId, formData);
+        if (res?.error) setError(res.error);
+        else {
+          setOpen(false);
+          resetFields();
+          router.refresh();
+        }
+      } catch {
+        // Lost connection mid-save — keep the data safe on the device.
+        queueLocally();
       }
     });
   };
@@ -146,6 +194,13 @@ export function ExposureCapture({
           Control limit {CONTROL_LIMIT_FML} f/ml
         </span>
       </div>
+
+      {savedOffline > 0 && (
+        <p className="mb-3 rounded-lg bg-warn-50 px-3 py-2 text-sm font-medium text-warn-700">
+          {savedOffline} record{savedOffline > 1 ? "s" : ""} saved on this device —
+          {" "}will sync automatically when you&apos;re back online.
+        </p>
+      )}
 
       {/* Grouped per-operative-day TWA */}
       <div className="mb-4 space-y-2">
