@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AI_ENABLED } from "@/lib/ai/client";
+import { draftIncident, type IncidentDraft } from "@/lib/ai/incidentAssist";
 import type { IncidentType, IncidentSeverity, IncidentStatus } from "@/lib/types";
 
 const TYPES: IncidentType[] = [
@@ -48,6 +50,40 @@ export async function createIncident(_prev: unknown, formData: FormData) {
 
   revalidatePath("/incidents");
   redirect("/incidents");
+}
+
+export type IncidentDraftState =
+  | { ok: true; draft: IncidentDraft }
+  | { ok: false; error: string }
+  | Record<string, never>;
+
+/**
+ * Turns a free-text account into a structured incident draft with AI for the
+ * reporter to review and edit. Read-only — never writes. The RIDDOR view is
+ * provisional and must be confirmed by a person before submitting.
+ */
+export async function draftIncidentAction(
+  _prev: IncidentDraftState,
+  formData: FormData
+): Promise<IncidentDraftState> {
+  if (!AI_ENABLED) {
+    return { ok: false, error: "AI drafting is not enabled on this account." };
+  }
+  const account = String(formData.get("account") ?? "").trim();
+  if (account.length < 15) {
+    return { ok: false, error: "Add a few more details about what happened." };
+  }
+
+  const supabase = createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return { ok: false, error: "Please sign in again." };
+
+  try {
+    const draft = await draftIncident(account);
+    return { ok: true, draft };
+  } catch {
+    return { ok: false, error: "Couldn't draft that. Fill the form in manually." };
+  }
 }
 
 /** Management updates the investigation status / outcome. */
