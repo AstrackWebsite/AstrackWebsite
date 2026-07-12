@@ -10,7 +10,7 @@ import {
   type AuditResult,
   type AuditResponse,
 } from "@/lib/auditTemplate";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { analyzeAudits } from "@/lib/ai/auditInsights";
 import { getAudits, getProjects } from "@/lib/data";
 import type { InsightState } from "@/lib/ai/insightTypes";
@@ -87,7 +87,7 @@ export async function auditInsightAction(): Promise<InsightState> {
 
     const result = await analyzeAudits(summaries);
     return { ok: true, result };
-  } catch {
-    return { ok: false, error: "Couldn't generate insights. Please try again." };
+  } catch (err) {
+    return { ok: false, error: `Couldn't generate insights — ${aiErrorReason(err)}.` };
   }
 }

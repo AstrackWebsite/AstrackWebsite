@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { streamRams } from "@/lib/ai/rams";
 import {
   getProjectById,
@@ -79,8 +79,10 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
-      } catch {
-        controller.enqueue(encoder.encode("\n\n[Draft interrupted — please try again.]"));
+      } catch (err) {
+        controller.enqueue(
+          encoder.encode(`\n\n[Draft interrupted — ${aiErrorReason(err)}.]`)
+        );
       } finally {
         controller.close();
       }

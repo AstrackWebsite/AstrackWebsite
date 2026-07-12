@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { askAssistant, type AssistantMessage } from "@/lib/ai/assistant";
 
 export type AssistantReply =
@@ -43,7 +43,7 @@ export async function askAssistantAction(
   try {
     const answer = await askAssistant(clean);
     return { ok: true, answer };
-  } catch {
-    return { ok: false, error: "Sorry — I couldn't answer that just now. Try again." };
+  } catch (err) {
+    return { ok: false, error: `Sorry — ${aiErrorReason(err)}.` };
   }
 }

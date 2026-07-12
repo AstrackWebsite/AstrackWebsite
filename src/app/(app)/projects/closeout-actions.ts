@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { draftCloseoutSummary } from "@/lib/ai/closeoutSummary";
 import {
   getProjectById,
@@ -71,8 +71,8 @@ export async function draftCloseoutSummaryAction(
     });
 
     return { ok: true, summary };
-  } catch {
-    return { ok: false, error: "Couldn't draft the summary. Please try again." };
+  } catch (err) {
+    return { ok: false, error: `Couldn't draft the summary — ${aiErrorReason(err)}.` };
   }
 }
 
