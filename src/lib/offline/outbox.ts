@@ -10,7 +10,7 @@
 const KEY = "astrack.outbox.v1";
 const EVENT = "astrack-outbox-change";
 
-export type OutboxKind = "exposure";
+export type OutboxKind = "exposure" | "signin" | "signout" | "plant_check";
 
 export interface OutboxItem {
   id: string;
@@ -63,6 +63,15 @@ export function enqueue(
 
 export function all(): OutboxItem[] {
   return read();
+}
+
+/** Merge a patch into a queued item's payload (e.g. sign out a pending sign-in). */
+export function updateItem(id: string, patch: Record<string, string | number | null>) {
+  const items = read();
+  const next = items.map((i) =>
+    i.id === id ? { ...i, payload: { ...i.payload, ...patch } } : i
+  );
+  write(next);
 }
 
 export function count(): number {

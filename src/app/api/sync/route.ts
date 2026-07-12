@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import type { AsbestosType } from "@/lib/types";
+import { staffBlockReason } from "@/lib/compliance";
+import type { AsbestosType, Staff } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,6 +64,80 @@ export async function POST(request: NextRequest) {
           fibre_level: fibre,
         });
         if (error) {
+          results.push({ id: item.id, ok: false, error: "Save rejected." });
+        } else {
+          results.push({ id: item.id, ok: true });
+        }
+      } else if (item.kind === "signin") {
+        const p = item.payload ?? {};
+        const staffId = String(p.staff_id ?? "");
+        const entryDate = String(p.entry_date ?? new Date().toISOString().slice(0, 10));
+        if (!staffId) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        // Recompute the block authoritatively at sync time from the live record.
+        const { data: staff } = await supabase
+          .from("staff")
+          .select("*")
+          .eq("id", staffId)
+          .single();
+        if (!staff) {
+          results.push({ id: item.id, ok: false, error: "Staff not found." });
+          continue;
+        }
+        const reason = staffBlockReason(staff as Staff);
+        const checkOut = (p.check_out as string) || null;
+        const row: {
+          project_id: string;
+          staff_id: string;
+          entry_date: string;
+          blocked?: boolean;
+          block_reason?: string;
+          check_in?: string;
+          check_out?: string;
+        } = reason
+          ? { project_id: item.projectId, staff_id: staffId, entry_date: entryDate, blocked: true, block_reason: reason }
+          : {
+              project_id: item.projectId,
+              staff_id: staffId,
+              entry_date: entryDate,
+              check_in: (p.check_in as string) || new Date().toISOString(),
+              ...(checkOut ? { check_out: checkOut } : {}),
+            };
+        const { error } = await supabase.from("site_register_entry").insert(row);
+        results.push(error ? { id: item.id, ok: false, error: "Save rejected." } : { id: item.id, ok: true });
+      } else if (item.kind === "signout") {
+        const entryId = String(item.payload?.entry_id ?? "");
+        if (!entryId) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        const { error } = await supabase
+          .from("site_register_entry")
+          .update({ check_out: String(item.payload?.check_out ?? new Date().toISOString()) })
+          .eq("id", entryId);
+        results.push(error ? { id: item.id, ok: false, error: "Save rejected." } : { id: item.id, ok: true });
+      } else if (item.kind === "plant_check") {
+        const plantId = String(item.payload?.plant_id ?? "");
+        if (!plantId) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        const { count } = await supabase
+          .from("plant_daily_check")
+          .select("*", { count: "exact", head: true })
+          .eq("project_id", item.projectId)
+          .eq("plant_id", plantId);
+        const { error } = await supabase.from("plant_daily_check").insert({
+          project_id: item.projectId,
+          plant_id: plantId,
+          check_date: String(item.payload?.check_date ?? new Date().toISOString().slice(0, 10)),
+          passed: true,
+          is_start_of_project: (count ?? 0) === 0,
+        });
+        // A repeat check for the same day is a harmless no-op, not a failure.
+        if (error && !/duplicate|unique/i.test(error.message)) {
           results.push({ id: item.id, ok: false, error: "Save rejected." });
         } else {
           results.push({ id: item.id, ok: true });

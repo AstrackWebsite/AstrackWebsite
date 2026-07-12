@@ -21,7 +21,7 @@ import {
   STAFF_ROLE_SHORT,
   GATED_PLANT_TYPES,
 } from "@/lib/roles";
-import { isExpired, isExpiringSoon } from "@/lib/compliance";
+import { isExpired, isExpiringSoon, staffBlockReason } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
 import { AI_ENABLED } from "@/lib/ai/client";
 import { RamsDrafter } from "@/components/RamsDrafter";
@@ -66,7 +66,16 @@ export default async function ProjectWorkspacePage({
   const onRegister = new Set(register.map((e) => e.staff_id));
   const available: AvailableStaff[] = staff
     .filter((s) => !onRegister.has(s.id))
-    .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+    .map((s) => {
+      const reason = staffBlockReason(s);
+      return {
+        id: s.id,
+        name: s.name,
+        roleShort: STAFF_ROLE_SHORT[s.role],
+        blocked: Boolean(reason),
+        blockReason: reason,
+      };
+    });
 
   // Exposure — operatives on site today (checked in, not blocked) can be logged.
   const operatives: Operative[] = register
