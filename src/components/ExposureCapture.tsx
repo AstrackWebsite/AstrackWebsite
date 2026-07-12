@@ -9,6 +9,7 @@ import {
   CONTROL_LIMIT_FML,
 } from "@/lib/compliance";
 import { ASBESTOS_TYPE_LABEL } from "@/lib/roles";
+import { EXPOSURE_TASK_OPTIONS, RPE_OPTIONS } from "@/lib/exposureOptions";
 import { formatDate } from "@/lib/format";
 import type { AsbestosType } from "@/lib/types";
 
@@ -52,6 +53,12 @@ export function ExposureCapture({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Menu-driven fields (picking beats typing on site).
+  const [staffId, setStaffId] = useState("");
+  const [task, setTask] = useState("");
+  const [asbestos, setAsbestos] = useState("");
+  const [mask, setMask] = useState("");
+
   // Live TWA inputs
   const [s1s, setS1s] = useState("");
   const [s1e, setS1e] = useState("");
@@ -84,6 +91,37 @@ export function ExposureCapture({
     }));
   }, [records]);
 
+  const lastRecord = records.length ? records[records.length - 1] : null;
+
+  const resetFields = () => {
+    setStaffId(""); setTask(""); setAsbestos(""); setMask("");
+    setS1s(""); setS1e(""); setS2s(""); setS2e(""); setFibre("");
+    setError(null);
+  };
+
+  // Fresh entry: default the "sticky" fields (asbestos type + mask rarely change
+  // through a shift) from the last record so they're pre-filled but editable.
+  const openFresh = () => {
+    resetFields();
+    if (lastRecord) {
+      setAsbestos(lastRecord.asbestos ?? "");
+      setMask(lastRecord.mask ?? "");
+    }
+    setOpen(true);
+  };
+
+  // Duplicate last: copy operative + task + asbestos + mask so a repeat entry is
+  // just times + fibre + Save. Only the reading and times need re-keying.
+  const duplicateLast = () => {
+    if (!lastRecord) return;
+    resetFields();
+    setStaffId(lastRecord.staffId);
+    setTask(lastRecord.task ?? "");
+    setAsbestos(lastRecord.asbestos ?? "");
+    setMask(lastRecord.mask ?? "");
+    setOpen(true);
+  };
+
   const onSubmit = (formData: FormData) => {
     formData.set("hours_exposure", String(liveHours));
     setError(null);
@@ -92,7 +130,7 @@ export function ExposureCapture({
       if (res?.error) setError(res.error);
       else {
         setOpen(false);
-        setS1s(""); setS1e(""); setS2s(""); setS2e(""); setFibre("");
+        resetFields();
         router.refresh();
       }
     });
@@ -138,18 +176,33 @@ export function ExposureCapture({
       </div>
 
       {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="btn-secondary w-full"
-        >
-          + Add exposure record
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={openFresh}
+            className="btn-secondary flex-1"
+          >
+            + Add exposure record
+          </button>
+          {lastRecord && (
+            <button
+              type="button"
+              onClick={duplicateLast}
+              className="btn-secondary flex-1"
+              title="Copy the last entry's operative, task, asbestos and mask"
+            >
+              ⧉ Duplicate last
+            </button>
+          )}
+        </div>
       ) : (
         <form action={onSubmit} className="space-y-3 border-t border-surface-border pt-4">
           <div>
             <label htmlFor="staff_id" className="label">Operative <span className="text-danger-500">*</span></label>
-            <select id="staff_id" name="staff_id" className="field" required defaultValue="">
+            <select
+              id="staff_id" name="staff_id" className="field" required
+              value={staffId} onChange={(e) => setStaffId(e.target.value)}
+            >
               <option value="" disabled>Select…</option>
               {operatives.map((o) => (
                 <option key={o.id} value={o.id}>{o.name}</option>
@@ -157,14 +210,21 @@ export function ExposureCapture({
             </select>
           </div>
 
-          <div>
-            <label htmlFor="task" className="label">Task</label>
-            <input id="task" name="task" className="field" placeholder="e.g. Stripping AIB" />
-          </div>
+          <PickOrType
+            name="task"
+            label="Task"
+            options={EXPOSURE_TASK_OPTIONS as unknown as string[]}
+            value={task}
+            onChange={setTask}
+            placeholder="Describe the task"
+          />
 
           <div>
             <label htmlFor="asbestos_type" className="label">Asbestos type</label>
-            <select id="asbestos_type" name="asbestos_type" className="field" defaultValue="">
+            <select
+              id="asbestos_type" name="asbestos_type" className="field"
+              value={asbestos} onChange={(e) => setAsbestos(e.target.value)}
+            >
               <option value="">—</option>
               {ASBESTOS.map((a) => (
                 <option key={a} value={a}>{ASBESTOS_TYPE_LABEL[a]}</option>
@@ -179,20 +239,24 @@ export function ExposureCapture({
             <TimeField label="Shift 2 end" name="shift2_end" value={s2e} onChange={setS2e} />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="fibre_level" className="label">Fibre level (f/ml) <span className="text-danger-500">*</span></label>
-              <input
-                id="fibre_level" name="fibre_level" type="number" step="0.001" min="0"
-                value={fibre} onChange={(e) => setFibre(e.target.value)}
-                className="field" required
-              />
-            </div>
-            <div>
-              <label htmlFor="mask_worn" className="label">Mask worn</label>
-              <input id="mask_worn" name="mask_worn" className="field" placeholder="e.g. Sundström SR500" />
-            </div>
+          <div>
+            <label htmlFor="fibre_level" className="label">Fibre level (f/ml) <span className="text-danger-500">*</span></label>
+            <input
+              id="fibre_level" name="fibre_level" type="number" step="0.001" min="0"
+              inputMode="decimal"
+              value={fibre} onChange={(e) => setFibre(e.target.value)}
+              className="field" required
+            />
           </div>
+
+          <PickOrType
+            name="mask_worn"
+            label="Mask worn"
+            options={RPE_OPTIONS as unknown as string[]}
+            value={mask}
+            onChange={setMask}
+            placeholder="RPE model"
+          />
 
           {/* Live 4-hour TWA */}
           <div className="rounded-lg bg-surface-muted p-3">
@@ -216,7 +280,7 @@ export function ExposureCapture({
           )}
 
           <div className="flex gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="btn-secondary flex-1">Cancel</button>
+            <button type="button" onClick={() => { setOpen(false); resetFields(); }} className="btn-secondary flex-1">Cancel</button>
             <button type="submit" disabled={pending} className="btn-primary flex-1">
               {pending ? "Saving…" : "Save"}
             </button>
@@ -224,6 +288,62 @@ export function ExposureCapture({
         </form>
       )}
     </section>
+  );
+}
+
+/**
+ * A big menu of common values with an "Other…" escape hatch to a text box.
+ * Submits the resolved value under `name` via a hidden input, so the server
+ * action is unchanged.
+ */
+function PickOrType({
+  name, label, options, value, onChange, placeholder,
+}: {
+  name: string;
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const isPreset = options.includes(value);
+  const [other, setOther] = useState(!isPreset && value !== "");
+  const selectValue = other ? "__other__" : isPreset ? value : "";
+
+  return (
+    <div>
+      <label htmlFor={name} className="label">{label}</label>
+      <select
+        id={name}
+        className="field"
+        value={selectValue}
+        onChange={(e) => {
+          if (e.target.value === "__other__") {
+            setOther(true);
+            onChange("");
+          } else {
+            setOther(false);
+            onChange(e.target.value);
+          }
+        }}
+      >
+        <option value="">—</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+        <option value="__other__">Other…</option>
+      </select>
+      {other && (
+        <input
+          className="field mt-2"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus
+        />
+      )}
+      <input type="hidden" name={name} value={value} />
+    </div>
   );
 }
 
