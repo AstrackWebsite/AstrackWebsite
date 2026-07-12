@@ -13,6 +13,7 @@ import {
   RIDDOR_SUGGEST_TYPES,
   PLANT_LINKED_INCIDENT_TYPES,
 } from "@/lib/roles";
+import { VoiceInput } from "@/components/VoiceInput";
 import type { IncidentType, IncidentSeverity, Staff, Project, Plant } from "@/lib/types";
 
 const initialState: { error?: string } = {};
@@ -226,6 +227,7 @@ function IncidentAssist({
   onDraft: (d: NonNullable<IncidentDraftState & { ok: true }>["draft"]) => void;
 }) {
   const [draft, draftAction] = useFormState(draftIncidentAction, initialDraft);
+  const [account, setAccount] = useState("");
   const appliedRef = useRef<IncidentDraftState | null>(null);
 
   useEffect(() => {
@@ -256,9 +258,19 @@ function IncidentAssist({
         name="account"
         rows={3}
         className="field"
+        value={account}
+        onChange={(e) => setAccount(e.target.value)}
         placeholder="e.g. About 2pm Dave caught his forearm on a cut edge of sheeting in the enclosure, deep cut, first aider dressed it, he carried on…"
       />
-      <DraftButton />
+      <div className="flex flex-wrap gap-2">
+        <VoiceInput
+          label="Dictate"
+          onAppend={(t) => setAccount((a) => (a ? `${a} ${t}` : t))}
+        />
+        <div className="flex-1">
+          <DraftButton />
+        </div>
+      </div>
 
       {error && (
         <p className="rounded-lg bg-warn-50 px-3 py-2 text-sm font-medium text-warn-700">

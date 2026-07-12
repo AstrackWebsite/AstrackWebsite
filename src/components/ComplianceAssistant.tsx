@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { askAssistantAction } from "@/app/(app)/assistant/actions";
+import { VoiceInput } from "@/components/VoiceInput";
 import type { AssistantMessage } from "@/lib/ai/assistant";
 
 const STARTERS = [
@@ -114,6 +115,10 @@ export function ComplianceAssistant() {
           rows={1}
           placeholder="Ask a compliance question…"
           className="field max-h-32 flex-1 resize-none"
+        />
+        <VoiceInput
+          label=""
+          onAppend={(t) => setInput((v) => (v ? `${v} ${t}` : t))}
         />
         <button
           type="submit"
