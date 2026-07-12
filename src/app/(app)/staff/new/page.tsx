@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { useFormState, useFormStatus } from "react-dom";
 import { createStaff } from "../actions";
 import { fieldsForRole } from "@/lib/staffForm";
@@ -27,9 +27,7 @@ export default function AddStaffPage() {
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <Link href="/staff" className="text-navy-500" aria-label="Back to staff">
-          ‹
-        </Link>
+        <BackLink href="/staff" label="Back to staff" />
         <h1 className="text-xl font-bold text-ink">Add Staff</h1>
       </div>
 

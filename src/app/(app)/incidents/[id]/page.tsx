@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import {
   getIncident,
@@ -43,7 +43,7 @@ export default async function IncidentDetailPage({
   return (
     <>
       <div className="mb-4 flex items-start gap-2">
-        <Link href="/incidents" className="mt-1 text-navy-500" aria-label="Back">‹</Link>
+        <BackLink href="/incidents" label="Back" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold text-ink">{incident.title}</h1>

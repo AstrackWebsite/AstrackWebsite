@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import {
   getProjectById,
@@ -112,9 +113,7 @@ export default async function ProjectWorkspacePage({
     <>
       {/* Header */}
       <div className="mb-4 flex items-start gap-2">
-        <Link href="/projects" className="mt-1 text-navy-500" aria-label="Back to projects">
-          ‹
-        </Link>
+        <BackLink href="/projects" label="Back to projects" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold text-ink">{project.address}</h1>
