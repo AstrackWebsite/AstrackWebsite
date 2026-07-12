@@ -23,12 +23,7 @@ export const NAV: NavSection[] = [
       { label: "Accident & Incident", href: "/incidents" },
       { label: "Audits", href: "/audits" },
       { label: "Project Planner", href: "/project-planner" },
-    ],
-  },
-  {
-    heading: "Coming later",
-    items: [
-      { label: "Client Portal", href: "/client-portal", placeholder: true },
+      { label: "Client Portal", href: "/client-portal" },
     ],
   },
 ];
