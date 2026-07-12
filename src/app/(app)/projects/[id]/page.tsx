@@ -170,6 +170,17 @@ export default async function ProjectWorkspacePage({
           <RamsDrafter projectId={project.id} reference={project.reference} />
         )}
 
+        {/* One-tap report — renders a branded PDF from whatever's been collected
+            so far, at any point in the job (not just at closeout). */}
+        <a
+          href={`/projects/${project.id}/closeout/pdf`}
+          target="_blank"
+          rel="noopener"
+          className="btn-secondary w-full"
+        >
+          ⤓ Download report (PDF)
+        </a>
+
         <Link href={`/projects/${project.id}/closeout`} className="btn-primary w-full">
           {project.status === "completed" ? "View closeout pack" : "Project closeout →"}
         </Link>

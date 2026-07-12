@@ -11,6 +11,7 @@ import {
   getPlantChecks,
   getAirMonitoringForProject,
   getCloseout,
+  getMyContext,
   staffNameMap,
 } from "@/lib/data";
 import { CloseoutPack, type CloseoutData } from "@/lib/pdf/CloseoutPack";
@@ -37,8 +38,9 @@ export async function GET(
   const project = await getProjectById(params.id);
   if (!project) return new Response("Not found", { status: 404 });
 
-  const [staff, client, register, exposure, plant, checks, air, closeout] =
+  const [ctx, staff, client, register, exposure, plant, checks, air, closeout] =
     await Promise.all([
+      getMyContext(),
       getStaff(),
       project.client_id ? getClient(project.client_id) : Promise.resolve(null),
       getRegisterForProject(project.id),
@@ -52,7 +54,14 @@ export async function GET(
   const names = staffNameMap(staff);
   const assetById = new Map(plant.map((p) => [p.id, p.asset_id]));
 
+  // Report title reflects where the project is: an interim compliance report
+  // during works, the full closeout pack once completed.
+  const completed = project.status === "completed" || Boolean(closeout?.completed_at);
+  const reportKind = completed ? "Project Closeout Pack" : "Site Compliance Report";
+
   const data: CloseoutData = {
+    companyName: ctx.company?.name ?? "Compliance Report",
+    reportKind,
     generatedAt: formatDate(new Date().toISOString().slice(0, 10)),
     project: {
       reference: project.reference,
@@ -111,10 +120,11 @@ export async function GET(
   >[0];
   const buffer = await renderToBuffer(element);
 
+  const slug = completed ? "closeout" : "report";
   return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="closeout-${project.reference}.pdf"`,
+      "Content-Disposition": `inline; filename="${slug}-${project.reference}.pdf"`,
     },
   });
 }
