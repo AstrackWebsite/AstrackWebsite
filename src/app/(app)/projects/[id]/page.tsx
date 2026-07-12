@@ -23,6 +23,8 @@ import {
 } from "@/lib/roles";
 import { isExpired, isExpiringSoon } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
+import { AI_ENABLED } from "@/lib/ai/client";
+import { RamsDrafter } from "@/components/RamsDrafter";
 
 export const dynamic = "force-dynamic";
 
@@ -163,6 +165,10 @@ export default async function ProjectWorkspacePage({
           operatives={operatives}
           records={exposureRows}
         />
+
+        {AI_ENABLED && (
+          <RamsDrafter projectId={project.id} reference={project.reference} />
+        )}
 
         <Link href={`/projects/${project.id}/closeout`} className="btn-primary w-full">
           {project.status === "completed" ? "View closeout pack" : "Project closeout →"}

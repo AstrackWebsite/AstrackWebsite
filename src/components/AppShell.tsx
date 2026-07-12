@@ -12,14 +12,32 @@ export function AppShell({
   userEmail,
   companyName,
   isPlatformAdmin = false,
+  aiEnabled = false,
 }: {
   children: React.ReactNode;
   userEmail: string;
   companyName?: string;
   isPlatformAdmin?: boolean;
+  aiEnabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  // The AI links only appear when AI is configured.
+  const sections = aiEnabled
+    ? NAV.map((s, i) =>
+        i === NAV.length - 1
+          ? {
+              ...s,
+              items: [
+                ...s.items,
+                { label: "Copilot", href: "/copilot" },
+                { label: "Compliance Assistant", href: "/assistant" },
+              ],
+            }
+          : s
+      )
+    : NAV;
 
   return (
     <div className="min-h-screen">
@@ -72,7 +90,7 @@ export function AppShell({
 
         <div className="flex h-[calc(100vh-3.5rem)] flex-col">
           <div className="flex-1 overflow-y-auto py-2">
-            {NAV.map((section, i) => (
+            {sections.map((section, i) => (
               <div key={i} className="py-1">
                 {section.heading && (
                   <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">

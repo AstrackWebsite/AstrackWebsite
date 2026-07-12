@@ -3,6 +3,9 @@ import { getAllExposure, getProjects, getStaff, staffNameMap } from "@/lib/data"
 import { CONTROL_LIMIT_FML } from "@/lib/compliance";
 import { ASBESTOS_TYPE_LABEL } from "@/lib/roles";
 import { formatDate } from "@/lib/format";
+import { AI_ENABLED } from "@/lib/ai/client";
+import { InsightsPanel } from "@/components/InsightsPanel";
+import { exposureInsightAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +29,15 @@ export default async function PersonalMonitoringPage() {
         <span className="text-sm text-ink-muted">Control limit</span>
         <span className="text-sm font-semibold text-ink">{CONTROL_LIMIT_FML} f/ml</span>
       </div>
+
+      {AI_ENABLED && exposure.length > 0 && (
+        <InsightsPanel
+          generate={exposureInsightAction}
+          title="Exposure insights"
+          blurb="Spot who's trending near the control limit and which tasks drive exposure."
+          cta="Analyse exposure data"
+        />
+      )}
 
       <div className="space-y-2">
         {exposure.length === 0 && (

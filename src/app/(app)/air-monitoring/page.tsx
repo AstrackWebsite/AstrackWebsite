@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/PageStub";
 import { getAirMonitoring, getProjects, getStaff, staffNameMap } from "@/lib/data";
 import { AIR_MONITORING_TYPE_LABEL } from "@/lib/roles";
@@ -16,10 +17,15 @@ export default async function AirMonitoringPage() {
 
   return (
     <>
-      <PageHeader
-        title="Air Monitoring"
-        subtitle="Independent UKAS-analyst results across all projects"
-      />
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <PageHeader
+          title="Air Monitoring"
+          subtitle="Independent UKAS-analyst results across all projects"
+        />
+        <Link href="/air-monitoring/new" className="btn-primary shrink-0 px-4 py-2 text-sm">
+          + Log result
+        </Link>
+      </div>
       <div className="space-y-2">
         {results.length === 0 && (
           <p className="card p-4 text-sm text-ink-muted">No air monitoring recorded.</p>

@@ -2,6 +2,7 @@ import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { getProjectById, getCloseout } from "@/lib/data";
 import { CloseoutForm } from "@/components/CloseoutForm";
+import { AI_ENABLED } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,12 @@ export default async function CloseoutPage({
         air monitoring and clearance — ready to send to the client.
       </p>
 
-      <CloseoutForm projectId={project.id} closeout={closeout} completed={completed} />
+      <CloseoutForm
+        projectId={project.id}
+        closeout={closeout}
+        completed={completed}
+        aiEnabled={AI_ENABLED}
+      />
     </>
   );
 }
