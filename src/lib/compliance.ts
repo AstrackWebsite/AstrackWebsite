@@ -100,6 +100,24 @@ export function staffCertStatus(staff: Staff, on: Date = new Date()): CertStatus
 // ── 4-hour TWA (Rule 4) ──────────────────────────────────────────────────
 export const CONTROL_LIMIT_FML = 0.1; // f/ml, CAR 2012 control limit
 
+// ── Air monitoring pass thresholds ───────────────────────────────────────
+/**
+ * Clearance air testing (Stage 3 of the 4-stage clearance) passes below the
+ * clearance indicator of 0.01 f/ml. Background / leak / reassurance tests are
+ * judged against the CAR 2012 control limit of 0.1 f/ml.
+ */
+export const CLEARANCE_LIMIT_FML = 0.01;
+
+export function airLimitFor(type: string): number {
+  return type === "clearance" ? CLEARANCE_LIMIT_FML : CONTROL_LIMIT_FML;
+}
+
+/** Suggested pass/fail for an air result, or null when there is no reading. */
+export function airPasses(type: string, resultFml: number | null): boolean | null {
+  if (resultFml == null) return null;
+  return resultFml < airLimitFor(type);
+}
+
 /**
  * Contribution of a single exposure period to the 4-hour reference period:
  * C · t / 4  (hours). Matches the generated `twa_4h` column.
