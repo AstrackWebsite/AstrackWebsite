@@ -105,6 +105,8 @@ export interface Project {
   asb5_notification_date: string | null;
   rams_document_url: string | null;
   contract_value: number | null;
+  portal_token: string;
+  portal_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
