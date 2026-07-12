@@ -152,9 +152,9 @@ export default async function ProjectPlannerPage() {
                             <Link
                               key={p.id}
                               href={`/projects/${p.id}`}
-                              className={`relative flex h-7 items-center overflow-hidden rounded px-2 text-xs font-medium text-white ${STATUS_BAR[p.status]}`}
+                              className={`relative flex h-7 cursor-pointer items-center overflow-hidden rounded px-2 text-xs font-medium text-white transition-opacity hover:opacity-90 active:opacity-75 ${STATUS_BAR[p.status]}`}
                               style={{ marginLeft: Math.max(0, left), width }}
-                              title={`${p.reference} · ${p.address}`}
+                              title={`Open ${p.reference} · ${p.address}`}
                             >
                               <span className="truncate">{p.reference}</span>
                             </Link>
@@ -167,6 +167,38 @@ export default async function ProjectPlannerPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Tappable list — reliable way to open any project in the plan */}
+      {scheduled.length > 0 && (
+        <section className="mt-5">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">
+            Scheduled projects
+          </h2>
+          <div className="space-y-2">
+            {[...scheduled]
+              .sort((a, b) => (a.start_date! < b.start_date! ? -1 : 1))
+              .map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/projects/${p.id}`}
+                  className="card flex items-center gap-3 p-3 active:bg-surface-muted"
+                >
+                  <span className={`h-8 w-1.5 shrink-0 rounded-full ${STATUS_BAR[p.status]}`} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-ink">{p.address}</span>
+                    <span className="block truncate text-sm text-ink-muted">
+                      {p.reference}
+                      {p.supervisor_id && ` · ${names.get(p.supervisor_id) ?? ""}`}
+                      {p.start_date && ` · ${formatDay(p.start_date)}`}
+                      {p.end_date && ` – ${formatDay(p.end_date)}`}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-ink-faint">›</span>
+                </Link>
+              ))}
+          </div>
+        </section>
       )}
 
       {unscheduled.length > 0 && (
