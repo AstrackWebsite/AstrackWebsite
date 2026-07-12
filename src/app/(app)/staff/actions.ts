@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STAFF_FORM_CONFIG, STAFF_FIELDS } from "@/lib/staffForm";
 import type { StaffRole } from "@/lib/types";
+import { AI_ENABLED } from "@/lib/ai/client";
+import { scanCertificate, isScannable, type CertScanResult } from "@/lib/ai/certScan";
 
 const ROLES: StaffRole[] = [
   "contracts_manager",
@@ -51,4 +53,53 @@ export async function createStaff(_prev: unknown, formData: FormData) {
   revalidatePath("/staff");
   revalidatePath("/");
   redirect("/staff");
+}
+
+export type CertScanState =
+  | { ok: true; result: CertScanResult }
+  | { ok: false; error: string }
+  | Record<string, never>;
+
+/**
+ * Reads an uploaded certificate photo/PDF with AI and returns the extracted
+ * expiry dates for the operator to confirm. Never writes anything — the user
+ * reviews the result and the normal Save action persists it.
+ */
+export async function scanStaffCertificate(
+  _prev: CertScanState,
+  formData: FormData
+): Promise<CertScanState> {
+  if (!AI_ENABLED) {
+    return { ok: false, error: "AI scanning is not enabled on this account." };
+  }
+
+  const file = formData.get("certificate");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Choose a photo or PDF of the certificate." };
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    return { ok: false, error: "That file is too large. Keep it under 12MB." };
+  }
+  if (!isScannable(file.type)) {
+    return { ok: false, error: "Upload a JPG, PNG or PDF certificate." };
+  }
+
+  // Only management/admin manage staff — mirror the write-path guard so the AI
+  // endpoint can't be used to read data the caller couldn't otherwise reach.
+  const supabase = createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) {
+    return { ok: false, error: "Please sign in again." };
+  }
+
+  try {
+    const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+    const result = await scanCertificate(base64, file.type);
+    return { ok: true, result };
+  } catch {
+    return {
+      ok: false,
+      error: "Couldn't read that certificate. Enter the dates manually.",
+    };
+  }
 }
