@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { getStaffMember } from "@/lib/data";
 import { STAFF_ROLE_LABEL } from "@/lib/roles";
@@ -38,9 +38,7 @@ export default async function StaffProfilePage({
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <Link href="/staff" className="text-navy-500" aria-label="Back to staff">
-          ‹
-        </Link>
+        <BackLink href="/staff" label="Back to staff" />
         <div>
           <h1 className="text-xl font-bold text-ink">{staff.name}</h1>
           <p className="text-sm text-ink-muted">{STAFF_ROLE_LABEL[staff.role]}</p>

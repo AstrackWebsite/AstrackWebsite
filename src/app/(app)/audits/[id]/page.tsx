@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { getAudit, getProjectById, getStaffMember } from "@/lib/data";
 import { scoreTone } from "@/lib/auditTemplate";
@@ -36,7 +36,7 @@ export default async function AuditDetailPage({ params }: { params: { id: string
   return (
     <>
       <div className="mb-4 flex items-start gap-2">
-        <Link href="/audits" className="mt-1 text-navy-500" aria-label="Back">‹</Link>
+        <BackLink href="/audits" label="Back" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold text-ink">

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { getStaffByRole } from "@/lib/data";
 import { AddProjectForm } from "@/components/AddProjectForm";
 
@@ -13,9 +13,7 @@ export default async function NewProjectPage() {
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <Link href="/projects" className="text-navy-500" aria-label="Back to projects">
-          ‹
-        </Link>
+        <BackLink href="/projects" label="Back to projects" />
         <h1 className="text-xl font-bold text-ink">New Project</h1>
       </div>
 

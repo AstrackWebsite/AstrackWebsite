@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { getProjectById, getCloseout } from "@/lib/data";
 import { CloseoutForm } from "@/components/CloseoutForm";
@@ -18,9 +18,7 @@ export default async function CloseoutPage({
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <Link href={`/projects/${project.id}`} className="text-navy-500" aria-label="Back to project">
-          ‹
-        </Link>
+        <BackLink href={`/projects/${project.id}`} label="Back to project" />
         <div>
           <h1 className="text-xl font-bold text-ink">Closeout</h1>
           <p className="text-sm text-ink-muted">{project.address}</p>
