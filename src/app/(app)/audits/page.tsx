@@ -4,6 +4,9 @@ import { KpiTile } from "@/components/KpiTile";
 import { getAudits, getProjects, getStaff, staffNameMap } from "@/lib/data";
 import { scoreTone } from "@/lib/auditTemplate";
 import { formatDate } from "@/lib/format";
+import { AI_ENABLED } from "@/lib/ai/client";
+import { InsightsPanel } from "@/components/InsightsPanel";
+import { auditInsightAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +44,15 @@ export default async function AuditsPage() {
         <KpiTile value={avg == null ? "—" : `${avg}%`} label="Avg score" tone="value" />
         <KpiTile value={lowScores} label="Below 70%" tone={lowScores > 0 ? "danger" : "default"} />
       </div>
+
+      {AI_ENABLED && audits.length > 0 && (
+        <InsightsPanel
+          generate={auditInsightAction}
+          title="Audit & risk insights"
+          blurb="Find recurring failings and the categories to focus on across all audits."
+          cta="Analyse audit history"
+        />
+      )}
 
       <div className="space-y-2">
         {audits.length === 0 && (
