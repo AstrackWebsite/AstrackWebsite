@@ -1,19 +1,26 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { askAssistantAction } from "@/app/(app)/assistant/actions";
 import { VoiceInput } from "@/components/VoiceInput";
-import type { AssistantMessage } from "@/lib/ai/assistant";
+import type { ChatMsg, ChatReply } from "@/lib/ai/chatTypes";
 
-const STARTERS = [
-  "When is asbestos work notifiable (licensed) vs non-licensed?",
-  "What does a 4-stage clearance involve?",
-  "Is a needlestick-type cut from sheeting RIDDOR reportable?",
-  "How often do face-fit tests and medicals need renewing?",
-];
-
-export function ComplianceAssistant() {
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
+/**
+ * Reusable chat surface. Takes an `ask` server action that receives the full
+ * conversation and returns the next reply. Used by the compliance assistant and
+ * the data copilot.
+ */
+export function ChatPanel({
+  ask,
+  starters,
+  disclaimer,
+  placeholder,
+}: {
+  ask: (messages: ChatMsg[]) => Promise<ChatReply>;
+  starters: string[];
+  disclaimer: string;
+  placeholder: string;
+}) {
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -23,16 +30,13 @@ export function ComplianceAssistant() {
     const q = text.trim();
     if (!q || pending) return;
     setError(null);
-    const next: AssistantMessage[] = [...messages, { role: "user", content: q }];
+    const next: ChatMsg[] = [...messages, { role: "user", content: q }];
     setMessages(next);
     setInput("");
     startTransition(async () => {
-      const res = await askAssistantAction(next);
-      if (res.ok) {
-        setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
-      } else {
-        setError(res.error);
-      }
+      const res = await ask(next);
+      if (res.ok) setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
+      else setError(res.error);
       requestAnimationFrame(() =>
         endRef.current?.scrollIntoView({ behavior: "smooth" })
       );
@@ -41,16 +45,12 @@ export function ComplianceAssistant() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-700">
-        General guidance on UK asbestos compliance (CAR 2012, HSG247/248, RIDDOR).
-        Not legal advice — confirm anything consequential with your competent
-        person, risk assessment or the HSE.
-      </p>
+      <p className="rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-700">{disclaimer}</p>
 
       {messages.length === 0 && (
         <div className="space-y-2">
           <p className="text-sm font-medium text-ink-muted">Try asking…</p>
-          {STARTERS.map((s) => (
+          {starters.map((s) => (
             <button
               key={s}
               type="button"
@@ -64,10 +64,7 @@ export function ComplianceAssistant() {
       )}
 
       {messages.map((m, i) => (
-        <div
-          key={i}
-          className={m.role === "user" ? "flex justify-end" : "flex justify-start"}
-        >
+        <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
           <div
             className={
               m.role === "user"
@@ -113,13 +110,10 @@ export function ComplianceAssistant() {
             }
           }}
           rows={1}
-          placeholder="Ask a compliance question…"
+          placeholder={placeholder}
           className="field max-h-32 flex-1 resize-none"
         />
-        <VoiceInput
-          label=""
-          onAppend={(t) => setInput((v) => (v ? `${v} ${t}` : t))}
-        />
+        <VoiceInput label="" onAppend={(t) => setInput((v) => (v ? `${v} ${t}` : t))} />
         <button
           type="submit"
           disabled={pending || !input.trim()}

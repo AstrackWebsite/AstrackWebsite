@@ -23,11 +23,18 @@ export function AppShell({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // The assistant link only appears when AI is configured.
+  // The AI links only appear when AI is configured.
   const sections = aiEnabled
     ? NAV.map((s, i) =>
         i === NAV.length - 1
-          ? { ...s, items: [...s.items, { label: "Compliance Assistant", href: "/assistant" }] }
+          ? {
+              ...s,
+              items: [
+                ...s.items,
+                { label: "Copilot", href: "/copilot" },
+                { label: "Compliance Assistant", href: "/assistant" },
+              ],
+            }
           : s
       )
     : NAV;
