@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveCloseout, completeProject } from "@/app/(app)/projects/closeout-actions";
+import {
+  saveCloseout,
+  completeProject,
+  draftCloseoutSummaryAction,
+} from "@/app/(app)/projects/closeout-actions";
 import type { ProjectCloseout } from "@/lib/types";
 
 const HANDOVER: { key: keyof ProjectCloseout; label: string }[] = [
@@ -23,10 +27,12 @@ export function CloseoutForm({
   projectId,
   closeout,
   completed,
+  aiEnabled,
 }: {
   projectId: string;
   closeout: ProjectCloseout | null;
   completed: boolean;
+  aiEnabled: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -94,6 +100,8 @@ export function CloseoutForm({
           </a>
         </div>
       )}
+
+      {aiEnabled && <SummaryDrafter projectId={projectId} />}
 
       {/* Analyst handover */}
       <section className="card p-5">
@@ -191,6 +199,90 @@ export function CloseoutForm({
         </div>
       )}
     </div>
+  );
+}
+
+function SummaryDrafter({ projectId }: { projectId: string }) {
+  const [pending, startTransition] = useTransition();
+  const [summary, setSummary] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const generate = () => {
+    setError(null);
+    setCopied(false);
+    startTransition(async () => {
+      const res = await draftCloseoutSummaryAction(projectId);
+      if ("ok" in res && res.ok) setSummary(res.summary);
+      else if ("ok" in res) setError(res.error);
+    });
+  };
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(summary);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy — select the text and copy manually.");
+    }
+  };
+
+  return (
+    <section className="card space-y-3 border-accent-200 bg-accent-50/50 p-5">
+      <div className="flex items-start gap-2">
+        <SparkIcon />
+        <div>
+          <h2 className="font-semibold text-ink">Draft the client summary</h2>
+          <p className="text-sm text-ink-muted">
+            Generate a completion summary from this project&apos;s record to paste
+            into your handover letter. Review and edit before sending.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={generate}
+        disabled={pending}
+        className="btn-secondary w-full"
+      >
+        {pending ? "Drafting…" : summary ? "Regenerate" : "Draft summary"}
+      </button>
+
+      {error && (
+        <p className="rounded-lg bg-warn-50 px-3 py-2 text-sm font-medium text-warn-700">
+          {error}
+        </p>
+      )}
+
+      {summary && (
+        <>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            rows={8}
+            className="field"
+          />
+          <button type="button" onClick={copy} className="btn-secondary w-full">
+            {copied ? "Copied ✓" : "Copy to clipboard"}
+          </button>
+        </>
+      )}
+    </section>
+  );
+}
+
+function SparkIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="mt-0.5 h-5 w-5 shrink-0 text-accent-600"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 2l1.6 4.8L18 8l-4.4 1.2L12 14l-1.6-4.8L6 8l4.4-1.2L12 2zM19 13l.9 2.6L22 16l-2.1.4L19 19l-.9-2.6L16 16l2.1-.4L19 13zM5 14l.9 2.6L8 17l-2.1.4L5 20l-.9-2.6L2 17l2.1-.4L5 14z" />
+    </svg>
   );
 }
 
