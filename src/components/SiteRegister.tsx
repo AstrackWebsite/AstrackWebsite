@@ -158,11 +158,7 @@ export function SiteRegister({
   const ready = allChecked(checklist) && rpe !== "";
 
   return (
-    <section className="card p-5">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
-        Site Register · Today
-      </h2>
-
+    <div>
       <ul className="mb-4 divide-y divide-surface-border">
         {rows.length === 0 && pendingSignins.length === 0 && (
           <li className="py-3 text-sm text-ink-muted">No one signed in yet.</li>
@@ -383,7 +379,7 @@ export function SiteRegister({
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }
 

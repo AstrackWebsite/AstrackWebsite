@@ -40,17 +40,14 @@ export function WorkAreas({
   };
 
   return (
-    <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
-          Work Areas &amp; Plans
-        </h2>
-        {!open && (
+    <div>
+      {!open && (
+        <div className="mb-3 flex justify-end">
           <button type="button" onClick={() => setOpen(true)} className="btn-secondary px-3 py-2 text-sm">
             + Add area
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {open && (
         <form action={onSubmit} className="mb-4 space-y-3 border-b border-surface-border pb-4">
@@ -125,6 +122,6 @@ export function WorkAreas({
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

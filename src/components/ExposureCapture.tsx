@@ -185,11 +185,8 @@ export function ExposureCapture({
   };
 
   return (
-    <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
-          Exposure Log
-        </h2>
+    <div>
+      <div className="mb-3 flex justify-end">
         <span className="text-xs text-ink-faint">
           Control limit {CONTROL_LIMIT_FML} f/ml
         </span>
@@ -342,7 +339,7 @@ export function ExposureCapture({
           </div>
         </form>
       )}
-    </section>
+    </div>
   );
 }
 

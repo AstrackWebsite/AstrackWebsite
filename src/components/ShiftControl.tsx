@@ -36,13 +36,10 @@ export function ShiftControl({
   const ended = Boolean(shift?.endedAt);
 
   return (
-    <section className="card p-5">
+    <div>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
-            Today&apos;s Shift
-          </h2>
-          <p className="mt-0.5 text-sm text-ink-muted">
+          <p className="text-sm text-ink-muted">
             {ended
               ? `Started ${formatTime(shift!.startedAt)} · ended ${formatTime(shift!.endedAt)}`
               : started
@@ -97,6 +94,6 @@ export function ShiftControl({
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }

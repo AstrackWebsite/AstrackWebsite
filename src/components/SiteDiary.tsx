@@ -92,17 +92,14 @@ export function SiteDiary({
   };
 
   return (
-    <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
-          Site Diary
-        </h2>
-        {!open && (
+    <div>
+      {!open && (
+        <div className="mb-3 flex justify-end">
           <button type="button" onClick={() => setOpen(true)} className="btn-secondary px-3 py-2 text-sm">
             + Add entry
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {!hasToday && !open && (
         <p className="mb-3 rounded-lg bg-warn-50 px-3 py-2 text-sm font-medium text-warn-700">
@@ -186,6 +183,6 @@ export function SiteDiary({
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

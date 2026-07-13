@@ -69,11 +69,7 @@ export function PlantChecks({
   };
 
   return (
-    <section className="card p-5">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
-        Plant &amp; Equipment
-      </h2>
-
+    <div>
       {/* Licensed-project gate (Rule 5) */}
       {gate.licensed && gate.requiredCount > 0 && (
         <div
@@ -146,6 +142,6 @@ export function PlantChecks({
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

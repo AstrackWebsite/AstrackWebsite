@@ -41,10 +41,7 @@ export function SiteTeam({
   };
 
   return (
-    <section className="card p-5">
-      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ink-muted">
-        Site Team
-      </h2>
+    <div>
       <p className="mb-3 text-xs text-ink-faint">
         Office picks who&apos;s on this job — the supervisor can only sign these
         people in.
@@ -103,6 +100,6 @@ export function SiteTeam({
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }

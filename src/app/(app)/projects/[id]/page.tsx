@@ -26,6 +26,7 @@ import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
 import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
 import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { isOfficeRole } from "@/lib/types";
 import {
   PROJECT_STATUS_LABEL,
@@ -159,6 +160,9 @@ export default async function ProjectWorkspacePage({
 
   const stillOnSite = register.filter((e) => e.check_in && !e.check_out && !e.blocked).length;
   const shiftState = shift ? { startedAt: shift.started_at, endedAt: shift.ended_at } : null;
+  const todayLogged = siteLog.some((e) => e.log_date === today);
+  const plantCheckedToday = plant.filter((p) => checkedTodayIds.has(p.id)).length;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
   // Office team management: current team + who else can be added.
   const teamMembers: TeamMember[] = team.map((s) => ({
@@ -234,29 +238,75 @@ export default async function ProjectWorkspacePage({
         )}
       </section>
 
-      {/* Site register with cert-blocking */}
+      {/* On-site workspace — tidy tap-to-open sections. Shift + Register open by
+          default (done first on arrival); the rest tucked away to keep the page
+          short and easy to navigate one-handed. */}
       <div className="space-y-4">
-        <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
+        <CollapsibleSection
+          title="Today's Shift"
+          defaultOpen
+          summary={shiftState ? (shiftState.endedAt ? "Ended" : "In progress") : "Not started"}
+        >
+          <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
+        </CollapsibleSection>
+
         {office && (
-          <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
+          <CollapsibleSection title="Site Team" summary={plural(teamMembers.length, "assigned")}>
+            <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
+          </CollapsibleSection>
         )}
-        <WorkAreas projectId={project.id} areas={workAreaRows} />
-        <SiteRegister projectId={project.id} rows={rows} available={available} />
-        <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
-        <ExposureCapture
-          projectId={project.id}
-          operatives={operatives}
-          records={exposureRows}
-        />
 
-        <SiteDiary
-          projectId={project.id}
-          entries={diaryEntries}
-          staff={staff.map((s) => ({ id: s.id, name: s.name }))}
-          todayISO={today}
-        />
+        <CollapsibleSection
+          title="Work Areas & Plans"
+          summary={workAreaRows.length ? plural(workAreaRows.length, "area") : "None yet"}
+        >
+          <WorkAreas projectId={project.id} areas={workAreaRows} />
+        </CollapsibleSection>
 
-        <VisitorLog projectId={project.id} visitors={visitorRows} />
+        <CollapsibleSection
+          title="Site Register · Today"
+          defaultOpen
+          summary={stillOnSite > 0 ? `${stillOnSite} on site` : "No one signed in"}
+        >
+          <SiteRegister projectId={project.id} rows={rows} available={available} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Plant & Equipment"
+          summary={plant.length ? `${plantCheckedToday}/${plant.length} checked today` : "None assigned"}
+        >
+          <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Exposure Log"
+          summary={exposureRows.length ? plural(exposureRows.length, "record") : "None yet"}
+        >
+          <ExposureCapture
+            projectId={project.id}
+            operatives={operatives}
+            records={exposureRows}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Site Diary"
+          summary={todayLogged ? plural(diaryEntries.length, "entry").replace("entrys", "entries") : "⚠ No log for today"}
+        >
+          <SiteDiary
+            projectId={project.id}
+            entries={diaryEntries}
+            staff={staff.map((s) => ({ id: s.id, name: s.name }))}
+            todayISO={today}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Visitors"
+          summary={visitorRows.length ? plural(visitorRows.length, "logged") : "None logged"}
+        >
+          <VisitorLog projectId={project.id} visitors={visitorRows} />
+        </CollapsibleSection>
 
         {AI_ENABLED && (
           <RamsDrafter projectId={project.id} reference={project.reference} />
