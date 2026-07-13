@@ -19,6 +19,7 @@ import type {
   SiteLog,
   SiteVisitor,
   SiteShift,
+  WorkArea,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -348,4 +349,23 @@ export async function getShiftForDate(
     .eq("shift_date", date)
     .maybeSingle();
   return (data as SiteShift) ?? null;
+}
+
+// ── Work areas / enclosures ──────────────────────────────────────────────────
+export async function getWorkAreas(projectId: string): Promise<WorkArea[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("work_area")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+  return (data as WorkArea[]) ?? [];
+}
+
+/** A short-lived signed URL for a plan file in the private "plans" bucket. */
+export async function signPlanUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const supabase = createClient();
+  const { data } = await supabase.storage.from("plans").createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
 }

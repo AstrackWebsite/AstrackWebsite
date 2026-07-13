@@ -229,6 +229,17 @@ export interface Incident {
   created_at: string;
 }
 
+export interface WorkArea {
+  id: string;
+  company_id: string;
+  project_id: string;
+  name: string;
+  location: string | null;
+  notes: string | null;
+  plan_path: string | null;
+  created_at: string;
+}
+
 export interface SiteShift {
   id: string;
   company_id: string;

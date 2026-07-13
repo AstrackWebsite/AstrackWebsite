@@ -12,6 +12,8 @@ import {
   getSiteLog,
   getVisitors,
   getShiftForDate,
+  getWorkAreas,
+  signPlanUrl,
   staffNameMap,
 } from "@/lib/data";
 import { SiteRegister, type RegisterRow, type AvailableStaff } from "@/components/SiteRegister";
@@ -20,6 +22,7 @@ import { PlantChecks, type PlantRow, type PlantGate } from "@/components/PlantCh
 import { SiteDiary, type DiaryEntry } from "@/components/SiteDiary";
 import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
+import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
@@ -43,7 +46,7 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors, shift] =
+  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors, shift, workAreas] =
     await Promise.all([
       getStaff(),
       getRegisterForDate(project.id, today),
@@ -54,6 +57,7 @@ export default async function ProjectWorkspacePage({
       getSiteLog(project.id),
       getVisitors(project.id),
       getShiftForDate(project.id, today),
+      getWorkAreas(project.id),
     ]);
 
   const names = staffNameMap(staff);
@@ -146,6 +150,17 @@ export default async function ProjectWorkspacePage({
   const stillOnSite = register.filter((e) => e.check_in && !e.check_out && !e.blocked).length;
   const shiftState = shift ? { startedAt: shift.started_at, endedAt: shift.ended_at } : null;
 
+  const workAreaRows: WorkAreaRow[] = await Promise.all(
+    workAreas.map(async (a) => ({
+      id: a.id,
+      name: a.name,
+      location: a.location,
+      notes: a.notes,
+      hasPlan: Boolean(a.plan_path),
+      planUrl: await signPlanUrl(a.plan_path),
+    }))
+  );
+
   const gatedPlant = plant.filter((p) => GATED_PLANT_TYPES.includes(p.type));
   const gate: PlantGate = {
     licensed: project.classification === "licensed",
@@ -202,6 +217,7 @@ export default async function ProjectWorkspacePage({
       {/* Site register with cert-blocking */}
       <div className="space-y-4">
         <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
+        <WorkAreas projectId={project.id} areas={workAreaRows} />
         <SiteRegister projectId={project.id} rows={rows} available={available} />
         <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
         <ExposureCapture
