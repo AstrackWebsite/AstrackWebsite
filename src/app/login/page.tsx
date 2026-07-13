@@ -85,7 +85,7 @@ export default function LoginPage() {
         </p>
 
         <p className="mt-6 text-center text-xs text-navy-200">
-          HSE-licensed · CAR 2012 compliant by design
+          Built for HSE-licensed contractors · CAR 2012 by design
         </p>
       </div>
     </main>
