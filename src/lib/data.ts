@@ -16,6 +16,8 @@ import type {
   Profile,
   Incident,
   Audit,
+  SiteLog,
+  SiteVisitor,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -308,4 +310,27 @@ export async function getCloseout(
     .eq("project_id", projectId)
     .maybeSingle();
   return (data as ProjectCloseout) ?? null;
+}
+
+// ── Site diary + visitors ────────────────────────────────────────────────────
+export async function getSiteLog(projectId: string): Promise<SiteLog[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_log")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  return (data as SiteLog[]) ?? [];
+}
+
+export async function getVisitors(projectId: string): Promise<SiteVisitor[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_visitor")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  return (data as SiteVisitor[]) ?? [];
 }

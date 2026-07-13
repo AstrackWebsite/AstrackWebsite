@@ -9,11 +9,15 @@ import {
   getExposureForProject,
   getProjectPlant,
   getPlantChecks,
+  getSiteLog,
+  getVisitors,
   staffNameMap,
 } from "@/lib/data";
 import { SiteRegister, type RegisterRow, type AvailableStaff } from "@/components/SiteRegister";
 import { ExposureCapture, type ExposureRow, type Operative } from "@/components/ExposureCapture";
 import { PlantChecks, type PlantRow, type PlantGate } from "@/components/PlantChecks";
+import { SiteDiary, type DiaryEntry } from "@/components/SiteDiary";
+import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
@@ -37,14 +41,17 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, plantChecks] = await Promise.all([
-    getStaff(),
-    getRegisterForDate(project.id, today),
-    project.client_id ? getClient(project.client_id) : Promise.resolve(null),
-    getExposureForProject(project.id),
-    getProjectPlant(project.id),
-    getPlantChecks(project.id),
-  ]);
+  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors] =
+    await Promise.all([
+      getStaff(),
+      getRegisterForDate(project.id, today),
+      project.client_id ? getClient(project.client_id) : Promise.resolve(null),
+      getExposureForProject(project.id),
+      getProjectPlant(project.id),
+      getPlantChecks(project.id),
+      getSiteLog(project.id),
+      getVisitors(project.id),
+    ]);
 
   const names = staffNameMap(staff);
   const byId = new Map(staff.map((s) => [s.id, s]));
@@ -115,6 +122,24 @@ export default async function ProjectWorkspacePage({
     gated: GATED_PLANT_TYPES.includes(p.type),
     checkedToday: checkedTodayIds.has(p.id),
   }));
+  // Site diary + visitors
+  const diaryEntries: DiaryEntry[] = siteLog.map((e) => ({
+    id: e.id,
+    logDate: e.log_date,
+    category: e.category,
+    note: e.note,
+    authorName: e.author_staff_id ? names.get(e.author_staff_id) ?? null : null,
+    createdAt: e.created_at,
+  }));
+  const visitorRows: VisitorRow[] = visitors.map((v) => ({
+    id: v.id,
+    name: v.name,
+    organisation: v.organisation,
+    purpose: v.purpose,
+    timeIn: v.time_in,
+    timeOut: v.time_out,
+  }));
+
   const gatedPlant = plant.filter((p) => GATED_PLANT_TYPES.includes(p.type));
   const gate: PlantGate = {
     licensed: project.classification === "licensed",
@@ -177,6 +202,15 @@ export default async function ProjectWorkspacePage({
           operatives={operatives}
           records={exposureRows}
         />
+
+        <SiteDiary
+          projectId={project.id}
+          entries={diaryEntries}
+          staff={staff.map((s) => ({ id: s.id, name: s.name }))}
+          todayISO={today}
+        />
+
+        <VisitorLog projectId={project.id} visitors={visitorRows} />
 
         {AI_ENABLED && (
           <RamsDrafter projectId={project.id} reference={project.reference} />

@@ -229,6 +229,30 @@ export interface Incident {
   created_at: string;
 }
 
+export interface SiteLog {
+  id: string;
+  company_id: string;
+  project_id: string;
+  log_date: string;
+  author_staff_id: string | null;
+  category: string | null;
+  note: string;
+  created_at: string;
+}
+
+export interface SiteVisitor {
+  id: string;
+  company_id: string;
+  project_id: string;
+  visit_date: string;
+  name: string;
+  organisation: string | null;
+  purpose: string | null;
+  time_in: string | null;
+  time_out: string | null;
+  created_at: string;
+}
+
 export interface ProjectCloseout {
   id: string;
   project_id: string;
