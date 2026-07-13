@@ -18,6 +18,7 @@ import type {
   Audit,
   SiteLog,
   SiteVisitor,
+  SiteShift,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -333,4 +334,18 @@ export async function getVisitors(projectId: string): Promise<SiteVisitor[]> {
     .order("created_at", { ascending: false })
     .limit(60);
   return (data as SiteVisitor[]) ?? [];
+}
+
+export async function getShiftForDate(
+  projectId: string,
+  date: string
+): Promise<SiteShift | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_shift")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("shift_date", date)
+    .maybeSingle();
+  return (data as SiteShift) ?? null;
 }
