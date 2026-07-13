@@ -16,6 +16,7 @@ export const NAV: NavSection[] = [
     items: [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Staff", href: "/staff" },
+      { label: "Supervisors", href: "/team" },
       { label: "Projects", href: "/projects" },
       { label: "Plant & Equipment", href: "/plant" },
       { label: "Air Monitoring", href: "/air-monitoring" },
