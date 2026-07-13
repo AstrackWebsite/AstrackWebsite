@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "@/lib/nav";
+import { NAV, type NavSection } from "@/lib/nav";
 import { BrandMark, AsTrackWordmark } from "./Brand";
 import { SyncStatus } from "./SyncStatus";
 import { signOut } from "@/app/login/actions";
@@ -14,31 +14,42 @@ export function AppShell({
   companyName,
   isPlatformAdmin = false,
   aiEnabled = false,
+  office = true,
 }: {
   children: React.ReactNode;
   userEmail: string;
   companyName?: string;
   isPlatformAdmin?: boolean;
   aiEnabled?: boolean;
+  office?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // Site supervisors get a focused on-site menu; the office gets the full app.
+  const baseSections: NavSection[] = office
+    ? NAV
+    : [
+        {
+          items: [{ label: "My Jobs", href: "/projects" }],
+        },
+      ];
+
   // The AI links only appear when AI is configured.
   const sections = aiEnabled
-    ? NAV.map((s, i) =>
-        i === NAV.length - 1
+    ? baseSections.map((s, i) =>
+        i === baseSections.length - 1
           ? {
               ...s,
               items: [
                 ...s.items,
-                { label: "Copilot", href: "/copilot" },
+                ...(office ? [{ label: "Copilot", href: "/copilot" }] : []),
                 { label: "Compliance Assistant", href: "/assistant" },
               ],
             }
           : s
       )
-    : NAV;
+    : baseSections;
 
   return (
     <div className="min-h-screen">

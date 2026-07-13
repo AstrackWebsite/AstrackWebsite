@@ -26,6 +26,12 @@ export interface Profile {
   company_id: string | null;
   app_role: AppRole;
   is_platform_admin: boolean;
+  staff_id: string | null;
+}
+
+/** Office roles run the full app; site supervisors get the on-site view only. */
+export function isOfficeRole(role: AppRole | undefined | null): boolean {
+  return role === "admin" || role === "management";
 }
 
 export type ProjectClassification = "licensed" | "nnlw" | "general";

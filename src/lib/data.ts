@@ -1,6 +1,7 @@
 import { createClient } from "./supabase/server";
 import { hasExpiredCert } from "./compliance";
 import { ACTIVE_PROJECT_STATUSES } from "./roles";
+import { isOfficeRole } from "./types";
 import type {
   Staff,
   Project,
@@ -36,7 +37,7 @@ export async function getMyContext(): Promise<{
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, company_id, app_role, is_platform_admin")
+    .select("id, company_id, app_role, is_platform_admin, staff_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -127,6 +128,22 @@ export async function getProjects(): Promise<Project[]> {
     .from("project")
     .select("*")
     .order("start_date", { ascending: true });
+  return (data as Project[]) ?? [];
+}
+
+/**
+ * Projects for the current user. Office roles see all the company's projects; a
+ * site supervisor sees only the jobs they're assigned to supervise.
+ */
+export async function getProjectsForUser(): Promise<Project[]> {
+  const { profile } = await getMyContext();
+  const supabase = createClient();
+  let query = supabase.from("project").select("*").order("start_date", { ascending: true });
+  if (profile && !isOfficeRole(profile.app_role)) {
+    // Site supervisor — only their assigned jobs (none until linked to a staff id).
+    query = query.eq("supervisor_id", profile.staff_id ?? "00000000-0000-0000-0000-000000000000");
+  }
+  const { data } = await query;
   return (data as Project[]) ?? [];
 }
 

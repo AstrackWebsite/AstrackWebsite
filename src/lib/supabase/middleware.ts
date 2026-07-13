@@ -50,11 +50,37 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Signed-in users shouldn't sit on the auth pages.
-  if (user && (pathname === "/login" || pathname === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  if (user) {
+    // Role decides the experience: office runs the full app; a site supervisor
+    // is confined to their jobs + the compliance assistant.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("app_role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const office = prof?.app_role === "admin" || prof?.app_role === "management";
+    const home = office ? "/dashboard" : "/projects";
+
+    // Signed-in users shouldn't sit on the auth pages.
+    if (pathname === "/login" || pathname === "/signup") {
+      const url = request.nextUrl.clone();
+      url.pathname = home;
+      return NextResponse.redirect(url);
+    }
+
+    // Keep site supervisors within the on-site surface.
+    if (!office && !isPublic) {
+      const siteAllowed =
+        pathname.startsWith("/projects") ||
+        pathname.startsWith("/assistant") ||
+        pathname.startsWith("/api") ||
+        pathname.startsWith("/pending");
+      if (!siteAllowed) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/projects";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return response;
