@@ -10,7 +10,14 @@
 const KEY = "astrack.outbox.v1";
 const EVENT = "astrack-outbox-change";
 
-export type OutboxKind = "exposure" | "signin" | "signout" | "plant_check";
+export type OutboxKind =
+  | "exposure"
+  | "signin"
+  | "signout"
+  | "plant_check"
+  | "site_log"
+  | "visitor_in"
+  | "visitor_out";
 
 export interface OutboxItem {
   id: string;

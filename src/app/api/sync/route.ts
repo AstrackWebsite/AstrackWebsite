@@ -152,6 +152,49 @@ export async function POST(request: NextRequest) {
         } else {
           results.push({ id: item.id, ok: true });
         }
+      } else if (item.kind === "site_log") {
+        const p = item.payload ?? {};
+        const note = String(p.note ?? "").trim();
+        if (!note) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        const { error } = await supabase.from("site_log").insert({
+          project_id: item.projectId,
+          log_date: String(p.log_date ?? new Date().toISOString().slice(0, 10)),
+          category: (p.category as string) || null,
+          note,
+          author_staff_id: (p.author_staff_id as string) || null,
+        });
+        results.push(error ? { id: item.id, ok: false, error: "Save rejected." } : { id: item.id, ok: true });
+      } else if (item.kind === "visitor_in") {
+        const p = item.payload ?? {};
+        const name = String(p.name ?? "").trim();
+        if (!name) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        const { error } = await supabase.from("site_visitor").insert({
+          project_id: item.projectId,
+          visit_date: String(p.visit_date ?? new Date().toISOString().slice(0, 10)),
+          name,
+          organisation: (p.organisation as string) || null,
+          purpose: (p.purpose as string) || null,
+          time_in: (p.time_in as string) || new Date().toISOString(),
+          time_out: (p.time_out as string) || null,
+        });
+        results.push(error ? { id: item.id, ok: false, error: "Save rejected." } : { id: item.id, ok: true });
+      } else if (item.kind === "visitor_out") {
+        const visitorId = String(item.payload?.visitor_id ?? "");
+        if (!visitorId) {
+          results.push({ id: item.id, ok: false, error: "Invalid record." });
+          continue;
+        }
+        const { error } = await supabase
+          .from("site_visitor")
+          .update({ time_out: String(item.payload?.time_out ?? new Date().toISOString()) })
+          .eq("id", visitorId);
+        results.push(error ? { id: item.id, ok: false, error: "Save rejected." } : { id: item.id, ok: true });
       } else {
         results.push({ id: item.id, ok: false, error: "Unknown item type." });
       }

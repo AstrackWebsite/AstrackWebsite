@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addSiteLog } from "@/app/(app)/projects/site-log-actions";
-import { formatDate, formatTime } from "@/lib/format";
+import { formatDate, formatTime, todayISO as getToday } from "@/lib/format";
+import { enqueue } from "@/lib/offline/outbox";
+import { useOutbox } from "@/lib/offline/useOutbox";
+
+const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
 
 export interface DiaryEntry {
   id: string;
@@ -45,16 +49,44 @@ export function SiteDiary({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasToday = entries.some((e) => e.logDate === todayISO);
+  const staffName = new Map(staff.map((s) => [s.id, s.name]));
+  const queued = useOutbox(projectId, ["site_log"]);
+
+  const hasToday =
+    entries.some((e) => e.logDate === todayISO) ||
+    queued.some((q) => String(q.payload.log_date) === todayISO);
+
+  const queueLog = (fd: FormData) => {
+    const note = String(fd.get("note") ?? "").trim();
+    if (!note) {
+      setError("Write a short note for the log.");
+      return false;
+    }
+    enqueue("site_log", projectId, {
+      log_date: getToday(),
+      category: String(fd.get("category") ?? "") || null,
+      note,
+      author_staff_id: String(fd.get("author_staff_id") ?? "") || null,
+    });
+    return true;
+  };
 
   const onSubmit = (formData: FormData) => {
     setError(null);
+    if (isOffline()) {
+      if (queueLog(formData)) setOpen(false);
+      return;
+    }
     startTransition(async () => {
-      const res = await addSiteLog(projectId, formData);
-      if (res?.error) setError(res.error);
-      else {
-        setOpen(false);
-        router.refresh();
+      try {
+        const res = await addSiteLog(projectId, formData);
+        if (res?.error) setError(res.error);
+        else {
+          setOpen(false);
+          router.refresh();
+        }
+      } catch {
+        if (queueLog(formData)) setOpen(false);
       }
     });
   };
@@ -117,9 +149,28 @@ export function SiteDiary({
       )}
 
       <ul className="space-y-2">
-        {entries.length === 0 && (
+        {entries.length === 0 && queued.length === 0 && (
           <li className="text-sm text-ink-muted">No log entries yet.</li>
         )}
+        {queued.map((q) => {
+          const authorId = q.payload.author_staff_id ? String(q.payload.author_staff_id) : null;
+          return (
+            <li key={q.id} className="rounded-lg border border-warn-500/30 bg-warn-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-ink">
+                  {q.payload.category ? String(q.payload.category) : "Note"}
+                </span>
+                <span className="pill pill-warn">Pending sync</span>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-ink-muted">
+                {String(q.payload.note)}
+              </p>
+              {authorId && staffName.get(authorId) && (
+                <p className="mt-1 text-xs text-ink-faint">— {staffName.get(authorId)}</p>
+              )}
+            </li>
+          );
+        })}
         {entries.map((e) => (
           <li key={e.id} className="rounded-lg border border-surface-border p-3">
             <div className="flex items-center justify-between gap-2">
