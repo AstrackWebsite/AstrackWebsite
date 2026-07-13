@@ -78,7 +78,10 @@ export async function addWorkArea(projectId: string, formData: FormData) {
 
   if (error) {
     if (error.code === "42501") return { error: "You don't have permission to add work areas." };
-    return { error: "Could not save the work area. Please try again." };
+    if (/relation .*work_area.* does not exist|does not exist/i.test(error.message)) {
+      return { error: "Work area storage isn't set up yet — run migration 0011 in Supabase." };
+    }
+    return { error: `Could not save the work area: ${error.message}` };
   }
 
   revalidatePath(`/projects/${projectId}`);
