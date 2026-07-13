@@ -14,7 +14,10 @@ export async function assignStaff(projectId: string, staffId: string) {
   if (error) {
     if (/duplicate|unique/i.test(error.message)) return { ok: true }; // already on team
     if (error.code === "42501") return { error: "Only the office can assign the team." };
-    return { error: "Could not assign to the team." };
+    if (/relation .*project_staff.* does not exist|does not exist/i.test(error.message)) {
+      return { error: "Team storage isn't set up yet — run migration 0013 in Supabase." };
+    }
+    return { error: `Could not assign to the team: ${error.message}` };
   }
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
@@ -31,7 +34,7 @@ export async function unassignStaff(projectId: string, staffId: string) {
 
   if (error) {
     if (error.code === "42501") return { error: "Only the office can change the team." };
-    return { error: "Could not update the team." };
+    return { error: `Could not update the team: ${error.message}` };
   }
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
