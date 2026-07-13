@@ -120,6 +120,8 @@ export interface SiteRegisterEntry {
   check_out: string | null;
   blocked: boolean;
   block_reason: string | null;
+  checklist: { label: string; checked: boolean }[] | null;
+  rpe: string | null;
   created_at: string;
 }
 

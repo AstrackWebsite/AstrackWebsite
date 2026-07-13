@@ -109,7 +109,16 @@ export async function createProject(_prev: unknown, formData: FormData) {
  * Rule 1: expired medical / face-fit / mask blocks sign-in — we record a
  * BLOCKED entry with the reason instead of a check-in.
  */
-export async function signInStaff(projectId: string, staffId: string) {
+export interface SignInChecks {
+  checklist?: { label: string; checked: boolean }[];
+  rpe?: string | null;
+}
+
+export async function signInStaff(
+  projectId: string,
+  staffId: string,
+  checks: SignInChecks = {}
+) {
   const supabase = createClient();
 
   const { data: staff } = await supabase
@@ -129,6 +138,8 @@ export async function signInStaff(projectId: string, staffId: string) {
     blocked?: boolean;
     block_reason?: string;
     check_in?: string;
+    checklist?: { label: string; checked: boolean }[] | null;
+    rpe?: string | null;
   } = reason
     ? {
         project_id: projectId,
@@ -142,7 +153,18 @@ export async function signInStaff(projectId: string, staffId: string) {
         staff_id: staffId,
         entry_date: today,
         check_in: new Date().toISOString(),
+        checklist: checks.checklist ?? null,
+        rpe: checks.rpe || null,
       };
+
+  // For a clear-to-work sign-in, the supervisor's mandatory checks must be done.
+  if (!reason) {
+    const list = checks.checklist ?? [];
+    if (list.length === 0 || !list.every((c) => c.checked)) {
+      return { error: "Complete all pre-sign-in checks first." };
+    }
+    if (!checks.rpe) return { error: "Record the RPE worn." };
+  }
 
   const { error } = await supabase.from("site_register_entry").insert(row);
   if (error) return { error: "Could not sign in. Please try again." };

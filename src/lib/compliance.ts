@@ -97,6 +97,35 @@ export function staffCertStatus(staff: Staff, on: Date = new Date()): CertStatus
   return { level: "valid", label: "All certs valid", date: null };
 }
 
+export interface CertEvidenceItem {
+  label: string;
+  date: string | null;
+  level: CertLevel | "missing";
+}
+
+/** The site-critical certs an HSE inspector expects to see, with date + status. */
+const SITE_CERTS: { key: keyof Staff; label: string }[] = [
+  { key: "medical_expiry", label: "Medical" },
+  { key: "face_fit_expiry", label: "Face fit" },
+  { key: "mask_service_expiry", label: "Mask service" },
+  { key: "asbestos_training_expiry", label: "Asbestos training" },
+];
+
+/** Per-cert evidence for a staff member — powers the on-site HSE proof view. */
+export function staffCertEvidence(staff: Staff, on: Date = new Date()): CertEvidenceItem[] {
+  return SITE_CERTS.map(({ key, label }) => {
+    const date = (staff[key] as string | null) ?? null;
+    const level: CertLevel | "missing" = !date
+      ? "missing"
+      : isExpired(date, on)
+        ? "expired"
+        : isExpiringSoon(date, 30, on)
+          ? "expiring"
+          : "valid";
+    return { label, date, level };
+  });
+}
+
 // ── 4-hour TWA (Rule 4) ──────────────────────────────────────────────────
 export const CONTROL_LIMIT_FML = 0.1; // f/ml, CAR 2012 control limit
 

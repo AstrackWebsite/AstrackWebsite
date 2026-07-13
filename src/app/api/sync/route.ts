@@ -88,6 +88,12 @@ export async function POST(request: NextRequest) {
         }
         const reason = staffBlockReason(staff as Staff);
         const checkOut = (p.check_out as string) || null;
+        let checklist: { label: string; checked: boolean }[] | null = null;
+        try {
+          checklist = p.checklist ? JSON.parse(String(p.checklist)) : null;
+        } catch {
+          checklist = null;
+        }
         const row: {
           project_id: string;
           staff_id: string;
@@ -96,6 +102,8 @@ export async function POST(request: NextRequest) {
           block_reason?: string;
           check_in?: string;
           check_out?: string;
+          checklist?: { label: string; checked: boolean }[] | null;
+          rpe?: string | null;
         } = reason
           ? { project_id: item.projectId, staff_id: staffId, entry_date: entryDate, blocked: true, block_reason: reason }
           : {
@@ -103,6 +111,8 @@ export async function POST(request: NextRequest) {
               staff_id: staffId,
               entry_date: entryDate,
               check_in: (p.check_in as string) || new Date().toISOString(),
+              checklist,
+              rpe: (p.rpe as string) || null,
               ...(checkOut ? { check_out: checkOut } : {}),
             };
         const { error } = await supabase.from("site_register_entry").insert(row);

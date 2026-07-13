@@ -21,7 +21,7 @@ import {
   STAFF_ROLE_SHORT,
   GATED_PLANT_TYPES,
 } from "@/lib/roles";
-import { isExpired, isExpiringSoon, staffBlockReason } from "@/lib/compliance";
+import { isExpired, isExpiringSoon, staffBlockReason, staffCertEvidence } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
 import { AI_ENABLED } from "@/lib/ai/client";
 import { RamsDrafter } from "@/components/RamsDrafter";
@@ -60,6 +60,8 @@ export default async function ProjectWorkspacePage({
       blockReason: e.block_reason,
       checkIn: e.check_in,
       checkOut: e.check_out,
+      rpe: e.rpe ?? null,
+      certs: s ? staffCertEvidence(s) : [],
     };
   });
 
@@ -74,6 +76,7 @@ export default async function ProjectWorkspacePage({
         roleShort: STAFF_ROLE_SHORT[s.role],
         blocked: Boolean(reason),
         blockReason: reason,
+        certs: staffCertEvidence(s),
       };
     });
 
