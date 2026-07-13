@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
 
 const MAX_PLAN_BYTES = 15 * 1024 * 1024;
@@ -36,11 +37,33 @@ export async function addWorkArea(projectId: string, formData: FormData) {
 
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
     const key = `${ctx.company.id}/${projectId}/${crypto.randomUUID()}-${safe}`;
-    const { error: upErr } = await supabase.storage
-      .from("plans")
-      .upload(key, file, { contentType: file.type, upsert: false });
-    if (upErr) {
-      return { error: "Could not upload the plan. Check the file and try again." };
+
+    // Upload through the service-role client so it doesn't depend on the storage
+    // RLS policies being perfectly in place, and auto-create the private bucket
+    // the first time so there's no separate Storage setup step. Falls back to the
+    // user client if the service role key isn't configured.
+    if (ADMIN_ENABLED) {
+      const admin = createAdminClient();
+      const { data: bucket } = await admin.storage.getBucket("plans");
+      if (!bucket) {
+        await admin.storage.createBucket("plans", {
+          public: false,
+          fileSizeLimit: MAX_PLAN_BYTES,
+        });
+      }
+      const { error: upErr } = await admin.storage
+        .from("plans")
+        .upload(key, file, { contentType: file.type, upsert: false });
+      if (upErr) {
+        return { error: `Could not upload the plan: ${upErr.message}` };
+      }
+    } else {
+      const { error: upErr } = await supabase.storage
+        .from("plans")
+        .upload(key, file, { contentType: file.type, upsert: false });
+      if (upErr) {
+        return { error: `Could not upload the plan: ${upErr.message}` };
+      }
     }
     planPath = key;
   }

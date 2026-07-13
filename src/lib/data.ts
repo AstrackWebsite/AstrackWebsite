@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/server";
+import { createAdminClient, ADMIN_ENABLED } from "./supabase/admin";
 import { hasExpiredCert } from "./compliance";
 import { ACTIVE_PROJECT_STATUSES } from "./roles";
 import { isOfficeRole } from "./types";
@@ -395,6 +396,13 @@ export async function getWorkAreas(projectId: string): Promise<WorkArea[]> {
 /** A short-lived signed URL for a plan file in the private "plans" bucket. */
 export async function signPlanUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
+  // Prefer the service-role client so signing doesn't depend on storage RLS —
+  // uploads go through the same client, so this keeps read/write symmetric.
+  if (ADMIN_ENABLED) {
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from("plans").createSignedUrl(path, 3600);
+    if (data?.signedUrl) return data.signedUrl;
+  }
   const supabase = createClient();
   const { data } = await supabase.storage.from("plans").createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
