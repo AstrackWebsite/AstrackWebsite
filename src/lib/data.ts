@@ -253,6 +253,19 @@ export async function getProjectPlant(projectId: string): Promise<Plant[]> {
     .filter(Boolean);
 }
 
+/** The staff assigned to a project's team (office picks who's on the job). */
+export async function getProjectStaff(projectId: string): Promise<Staff[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_staff")
+    .select("staff(*)")
+    .eq("project_id", projectId);
+  const rows = (data as unknown as { staff: Staff | Staff[] }[]) ?? [];
+  return rows
+    .map((r) => (Array.isArray(r.staff) ? r.staff[0] : r.staff))
+    .filter(Boolean);
+}
+
 export async function getPlantChecks(
   projectId: string
 ): Promise<PlantDailyCheck[]> {

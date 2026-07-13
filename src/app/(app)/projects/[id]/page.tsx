@@ -13,6 +13,8 @@ import {
   getVisitors,
   getShiftForDate,
   getWorkAreas,
+  getProjectStaff,
+  getMyContext,
   signPlanUrl,
   staffNameMap,
 } from "@/lib/data";
@@ -23,6 +25,8 @@ import { SiteDiary, type DiaryEntry } from "@/components/SiteDiary";
 import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
 import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
+import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
+import { isOfficeRole } from "@/lib/types";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
@@ -46,7 +50,7 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors, shift, workAreas] =
+  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx] =
     await Promise.all([
       getStaff(),
       getRegisterForDate(project.id, today),
@@ -58,6 +62,8 @@ export default async function ProjectWorkspacePage({
       getVisitors(project.id),
       getShiftForDate(project.id, today),
       getWorkAreas(project.id),
+      getProjectStaff(project.id),
+      getMyContext(),
     ]);
 
   const names = staffNameMap(staff);
@@ -79,8 +85,12 @@ export default async function ProjectWorkspacePage({
     };
   });
 
+  const office = isOfficeRole(ctx.profile?.app_role);
+
+  // The register only offers the project's assigned team.
+  const teamIds = new Set(team.map((s) => s.id));
   const onRegister = new Set(register.map((e) => e.staff_id));
-  const available: AvailableStaff[] = staff
+  const available: AvailableStaff[] = team
     .filter((s) => !onRegister.has(s.id))
     .map((s) => {
       const reason = staffBlockReason(s);
@@ -150,6 +160,16 @@ export default async function ProjectWorkspacePage({
   const stillOnSite = register.filter((e) => e.check_in && !e.check_out && !e.blocked).length;
   const shiftState = shift ? { startedAt: shift.started_at, endedAt: shift.ended_at } : null;
 
+  // Office team management: current team + who else can be added.
+  const teamMembers: TeamMember[] = team.map((s) => ({
+    id: s.id,
+    name: s.name,
+    roleShort: STAFF_ROLE_SHORT[s.role],
+  }));
+  const addableStaff: TeamMember[] = staff
+    .filter((s) => !teamIds.has(s.id))
+    .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+
   const workAreaRows: WorkAreaRow[] = await Promise.all(
     workAreas.map(async (a) => ({
       id: a.id,
@@ -217,6 +237,9 @@ export default async function ProjectWorkspacePage({
       {/* Site register with cert-blocking */}
       <div className="space-y-4">
         <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
+        {office && (
+          <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
+        )}
         <WorkAreas projectId={project.id} areas={workAreaRows} />
         <SiteRegister projectId={project.id} rows={rows} available={available} />
         <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
