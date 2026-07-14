@@ -8,6 +8,7 @@ import {
   getRegisterForDate,
   getExposureForProject,
   getProjectPlant,
+  getAllPlant,
   getPlantChecks,
   getSiteLog,
   getVisitors,
@@ -26,6 +27,7 @@ import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
 import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
 import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
+import { SitePlant, type PlantOption } from "@/components/SitePlant";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { isOfficeRole } from "@/lib/types";
 import {
@@ -34,6 +36,7 @@ import {
   CLASSIFICATION_LABEL,
   STAFF_ROLE_SHORT,
   GATED_PLANT_TYPES,
+  PLANT_TYPE_LABEL,
 } from "@/lib/roles";
 import { isExpired, isExpiringSoon, staffBlockReason, staffCertEvidence } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
@@ -51,13 +54,14 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx] =
+  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx] =
     await Promise.all([
       getStaff(),
       getRegisterForDate(project.id, today),
       project.client_id ? getClient(project.client_id) : Promise.resolve(null),
       getExposureForProject(project.id),
       getProjectPlant(project.id),
+      getAllPlant(),
       getPlantChecks(project.id),
       getSiteLog(project.id),
       getVisitors(project.id),
@@ -164,6 +168,19 @@ export default async function ProjectWorkspacePage({
   const plantCheckedToday = plant.filter((p) => checkedTodayIds.has(p.id)).length;
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
+  // Office plant assignment: what's on the job vs. the rest of the fleet.
+  const toPlantOption = (p: (typeof allPlant)[number]): PlantOption => ({
+    id: p.id,
+    assetId: p.asset_id,
+    label: p.name ?? PLANT_TYPE_LABEL[p.type],
+    certExpired: isExpired(p.cert_expiry),
+  });
+  const assignedPlantIds = new Set(plant.map((p) => p.id));
+  const assignedPlantOptions: PlantOption[] = plant.map(toPlantOption);
+  const addablePlantOptions: PlantOption[] = allPlant
+    .filter((p) => !assignedPlantIds.has(p.id))
+    .map(toPlantOption);
+
   // Office team management: current team + who else can be added.
   const teamMembers: TeamMember[] = team.map((s) => ({
     id: s.id,
@@ -230,6 +247,14 @@ export default async function ProjectWorkspacePage({
             <Meta label="ASB5 notified" value={formatDate(project.asb5_notification_date)} />
           )}
         </dl>
+        {office && (
+          <Link
+            href={`/projects/${project.id}/edit`}
+            className="btn-secondary mt-3 w-full text-sm"
+          >
+            ✎ Edit project details
+          </Link>
+        )}
         {project.classification === "licensed" && (
           <p className="mt-3 rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-700">
             Licensed project — daily start-of-project plant checks (DCU / vacuum /
@@ -275,6 +300,13 @@ export default async function ProjectWorkspacePage({
           title="Plant & Equipment"
           summary={plant.length ? `${plantCheckedToday}/${plant.length} checked today` : "None assigned"}
         >
+          {office && (
+            <SitePlant
+              projectId={project.id}
+              assigned={assignedPlantOptions}
+              addable={addablePlantOptions}
+            />
+          )}
           <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
         </CollapsibleSection>
 
