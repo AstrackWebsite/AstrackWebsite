@@ -16,6 +16,7 @@ import type {
   PlantDailyCheck,
   AirMonitoringResult,
   ProjectCloseout,
+  ProjectReport,
   Company,
   Profile,
   Incident,
@@ -396,6 +397,19 @@ export async function getHandoversAwaitingReview(): Promise<
     address: row.project?.address ?? "—",
     submittedAt: row.submitted_for_review_at,
   }));
+}
+
+/** Saved office/client report copies filed against a project, newest first. */
+export async function getProjectReports(
+  projectId: string
+): Promise<ProjectReport[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_report")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("generated_at", { ascending: false });
+  return (data as ProjectReport[]) ?? [];
 }
 
 export async function getCloseout(
