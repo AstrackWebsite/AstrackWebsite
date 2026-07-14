@@ -131,6 +131,18 @@ export interface SiteRegisterEntry {
   created_at: string;
 }
 
+export interface StaffCertificate {
+  id: string;
+  company_id: string;
+  staff_id: string;
+  cert_field: string | null;
+  title: string | null;
+  file_path: string;
+  expiry_date: string | null;
+  issue_date: string | null;
+  uploaded_at: string;
+}
+
 export interface Plant {
   id: string;
   asset_id: string;

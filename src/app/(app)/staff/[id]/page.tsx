@@ -1,9 +1,10 @@
 import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
-import { getStaffMember } from "@/lib/data";
+import { getStaffMember, getStaffCertificates, signAttachmentUrl } from "@/lib/data";
 import { STAFF_ROLE_LABEL } from "@/lib/roles";
 import { staffBlockReason, isExpired, isExpiringSoon } from "@/lib/compliance";
 import { formatDate } from "@/lib/format";
+import { CERT_FIELD_LABEL } from "@/lib/certFields";
 import type { Staff } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,11 @@ export default async function StaffProfilePage({
 
   const blockReason = staffBlockReason(staff);
   const certs = CERTS.filter((c) => staff[c.key]);
+
+  const certDocs = await getStaffCertificates(params.id);
+  const certDocsWithUrls = await Promise.all(
+    certDocs.map(async (d) => ({ ...d, url: await signAttachmentUrl(d.file_path) }))
+  );
 
   return (
     <>
@@ -96,6 +102,41 @@ export default async function StaffProfilePage({
               </li>
             );
           })}
+        </ul>
+      </section>
+
+      <section className="card mt-4 p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
+          Certificate documents
+        </h2>
+        {certDocsWithUrls.length === 0 && (
+          <p className="text-sm text-ink-muted">
+            No documents on file yet. Use “Scan &amp; file a certificate” on the Staff page.
+          </p>
+        )}
+        <ul className="divide-y divide-surface-border">
+          {certDocsWithUrls.map((d) => (
+            <li key={d.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-ink">
+                  {d.cert_field ? CERT_FIELD_LABEL[d.cert_field] ?? d.title : d.title || "Certificate"}
+                </p>
+                <p className="text-xs text-ink-muted">
+                  {d.expiry_date ? `Expires ${formatDate(d.expiry_date)}` : "No expiry recorded"}
+                </p>
+              </div>
+              {d.url && (
+                <a
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="btn-secondary shrink-0 px-3 py-2 text-sm"
+                >
+                  View
+                </a>
+              )}
+            </li>
+          ))}
         </ul>
       </section>
     </>

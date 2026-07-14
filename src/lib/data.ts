@@ -5,6 +5,7 @@ import { ACTIVE_PROJECT_STATUSES } from "./roles";
 import { isOfficeRole } from "./types";
 import type {
   Staff,
+  StaffCertificate,
   Project,
   Client,
   SiteRegisterEntry,
@@ -232,6 +233,17 @@ export async function getAllExposure(): Promise<ExposureRecord[]> {
     .select("*")
     .order("entry_date", { ascending: false });
   return (data as ExposureRecord[]) ?? [];
+}
+
+/** Uploaded certificate documents for a staff member (most recent first). */
+export async function getStaffCertificates(staffId: string): Promise<StaffCertificate[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("staff_certificate")
+    .select("*")
+    .eq("staff_id", staffId)
+    .order("uploaded_at", { ascending: false });
+  return (data as StaffCertificate[]) ?? [];
 }
 
 // ── Plant ────────────────────────────────────────────────────────────────
