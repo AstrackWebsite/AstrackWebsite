@@ -13,6 +13,7 @@ import {
   getCloseout,
 } from "@/lib/data";
 import { CLASSIFICATION_LABEL } from "@/lib/roles";
+import { notifyOffice } from "@/lib/notify";
 
 const HANDOVER_ITEMS = [
   "plan_of_work_delivered",
@@ -144,6 +145,11 @@ export async function submitCloseoutForReview(projectId: string, formData: FormD
     if (error.code === "42501") return { error: "You don't have access to submit this." };
     return { error: "Could not submit for review." };
   }
+  await notifyOffice({
+    projectId,
+    kind: "handover",
+    message: "submitted the handover for office sign-off",
+  });
   revalidatePath(`/projects/${projectId}/closeout`);
   return { ok: true };
 }

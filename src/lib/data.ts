@@ -17,6 +17,7 @@ import type {
   AirMonitoringResult,
   ProjectCloseout,
   ProjectReport,
+  Notification,
   Company,
   Profile,
   Incident,
@@ -358,6 +359,27 @@ export async function getIncident(id: string): Promise<Incident | null> {
 }
 
 // ── Closeout ───────────────────────────────────────────────────────────────
+/** Recent office notifications (site activity), newest first. */
+export async function getNotifications(limit = 30): Promise<Notification[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("notification")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as Notification[]) ?? [];
+}
+
+/** Count of unread office notifications. */
+export async function getUnreadNotificationCount(): Promise<number> {
+  const supabase = createClient();
+  const { count } = await supabase
+    .from("notification")
+    .select("*", { count: "exact", head: true })
+    .is("read_at", null);
+  return count ?? 0;
+}
+
 export interface HandoverAwaitingReview {
   projectId: string;
   reference: string;

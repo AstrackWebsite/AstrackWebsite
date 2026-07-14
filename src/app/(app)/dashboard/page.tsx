@@ -7,7 +7,10 @@ import {
   staffNameMap,
   getMyContext,
   getHandoversAwaitingReview,
+  getNotifications,
+  getUnreadNotificationCount,
 } from "@/lib/data";
+import { NotificationsFeed, type NotificationRow } from "@/components/NotificationsFeed";
 import { hasExpiredCert } from "@/lib/compliance";
 import { ACTIVE_PROJECT_STATUSES, PROJECT_STATUS_LABEL, PROJECT_STATUS_PILL } from "@/lib/roles";
 import { isOfficeRole } from "@/lib/types";
@@ -28,6 +31,19 @@ export default async function DashboardPage() {
   const isOffice = isOfficeRole(ctx.profile?.app_role);
   const awaitingReview = isOffice ? await getHandoversAwaitingReview() : [];
 
+  // Office/admin see a documented feed of what supervisors have logged on site.
+  const [notifs, unread] = isOffice
+    ? await Promise.all([getNotifications(), getUnreadNotificationCount()])
+    : [[], 0];
+  const notifRows: NotificationRow[] = notifs.map((n) => ({
+    id: n.id,
+    projectId: n.project_id,
+    actorName: n.actor_name,
+    message: n.message,
+    createdAt: n.created_at,
+    read: Boolean(n.read_at),
+  }));
+
   const activeProjects = projects.filter((p) =>
     ACTIVE_PROJECT_STATUSES.includes(p.status)
   );
@@ -40,6 +56,8 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title="Overview" subtitle={ctx.company?.name ?? undefined} />
+
+      {isOffice && <NotificationsFeed notifications={notifRows} unread={unread} />}
 
       {awaitingReview.length > 0 && (
         <section className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4">

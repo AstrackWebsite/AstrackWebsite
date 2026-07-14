@@ -311,6 +311,18 @@ export interface SiteVisitor {
   created_at: string;
 }
 
+export interface Notification {
+  id: string;
+  company_id: string;
+  project_id: string | null;
+  kind: string;
+  message: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
 export interface ProjectReport {
   id: string;
   company_id: string;

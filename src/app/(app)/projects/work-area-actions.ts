@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
+import { notifyOffice } from "@/lib/notify";
 import {
   ENCLOSURE_REQUIREMENTS,
   ENCLOSURE_SETUP_CHECKS,
@@ -131,6 +132,13 @@ export async function addWorkArea(projectId: string, formData: FormData) {
     return { error: `Could not save the work area: ${error.message}` };
   }
 
+  await notifyOffice({
+    projectId,
+    kind: "enclosure",
+    message: hasSmoke
+      ? `recorded enclosure ${name} with a smoke test`
+      : `added enclosure ${name}`,
+  });
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }

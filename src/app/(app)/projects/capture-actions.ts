@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayISO } from "@/lib/format";
+import { notifyOffice } from "@/lib/notify";
 import type { AsbestosType } from "@/lib/types";
 
 const ASBESTOS: AsbestosType[] = ["chrysotile", "amosite", "crocidolite"];
@@ -41,6 +42,7 @@ export async function addExposure(projectId: string, formData: FormData) {
 
   if (error) return { error: "Could not save exposure record." };
 
+  await notifyOffice({ projectId, kind: "exposure", message: "logged an exposure record" });
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }
@@ -73,6 +75,9 @@ export async function logPlantCheck(projectId: string, plantId: string) {
     return { error: "Could not log the plant check." };
   }
 
+  if (!error) {
+    await notifyOffice({ projectId, kind: "plant", message: "recorded a plant check" });
+  }
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }

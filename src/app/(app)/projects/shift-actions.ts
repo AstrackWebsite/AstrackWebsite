@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyOffice } from "@/lib/notify";
 import { todayISO } from "@/lib/format";
 
 /**
@@ -66,6 +67,7 @@ export async function endShift(projectId: string) {
 
   if (error) return { error: "Could not end the shift. Please try again." };
 
+  await notifyOffice({ projectId, kind: "shift", message: "ended the site shift" });
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }

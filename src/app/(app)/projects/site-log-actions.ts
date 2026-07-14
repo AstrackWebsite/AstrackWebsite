@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
+import { notifyOffice } from "@/lib/notify";
 import { todayISO } from "@/lib/format";
 
 const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
@@ -77,6 +78,7 @@ export async function addSiteLog(projectId: string, formData: FormData) {
     if (error.code === "42501") return { error: "You don't have permission to add to the log." };
     return { error: `Could not save the log entry: ${error.message}` };
   }
+  await notifyOffice({ projectId, kind: "site_log", message: "added a site diary entry" });
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }
