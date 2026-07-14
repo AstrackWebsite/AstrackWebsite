@@ -58,8 +58,8 @@ export const PROJECT_STATUS_PILL: Record<ProjectStatus, string> = {
 
 export const CLASSIFICATION_LABEL: Record<ProjectClassification, string> = {
   licensed: "Licensed",
-  nnlw: "Non-Licensed (NNLW)",
-  general: "General",
+  nnlw: "Notifiable Non-Licensed (NNLW)",
+  general: "Non-Licensed",
 };
 
 /**
