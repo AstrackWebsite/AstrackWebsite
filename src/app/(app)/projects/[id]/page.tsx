@@ -322,8 +322,9 @@ export default async function ProjectWorkspacePage({
         )}
 
         <CollapsibleSection
-          title="Work Areas & Plans"
-          summary={workAreaRows.length ? plural(workAreaRows.length, "area") : "None yet"}
+          title="Enclosures & Work Areas"
+          defaultOpen
+          summary={workAreaRows.length ? plural(workAreaRows.length, "enclosure") : "Add one"}
         >
           <WorkAreas projectId={project.id} areas={workAreaRows} />
         </CollapsibleSection>
