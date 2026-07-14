@@ -55,7 +55,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-navy-600 py-6 text-center text-xs text-navy-200">
-        AsTrack · HSE-licensed &amp; CAR 2012 compliant by design
+        AsTrack · Built for HSE-licensed contractors · CAR 2012 by design
       </footer>
     </main>
   );

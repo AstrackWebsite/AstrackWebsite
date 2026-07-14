@@ -38,3 +38,24 @@ export function getClaude(): Anthropic {
   }
   return cached;
 }
+
+/**
+ * Turns an AI error into a short, user-safe reason so a failed call explains
+ * itself instead of a generic "try again". Recognises the common setup
+ * problems — bad key, no credit, unknown model — so they can be fixed fast.
+ */
+export function aiErrorReason(err: unknown): string {
+  if (err instanceof Anthropic.APIError) {
+    const status = err.status;
+    if (status === 401) return "the API key was rejected — check ANTHROPIC_API_KEY is correct";
+    if (status === 403) return "the API key isn't permitted to use this — check your Anthropic account";
+    if (status === 400 && /credit|balance|billing/i.test(err.message))
+      return "the Anthropic account has no credit — add billing at console.anthropic.com";
+    if (status === 404) return "the AI model wasn't found for this account";
+    if (status === 429) return "rate limit or quota reached — try again shortly, or check your Anthropic plan";
+    if (status && status >= 500) return "the AI service is temporarily unavailable — try again shortly";
+    return `the AI service returned an error (${status ?? "?"})`;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "an unexpected error occurred";
+}

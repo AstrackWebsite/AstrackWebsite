@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { airPasses } from "@/lib/compliance";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { scanAirReport, type AirReportResult } from "@/lib/ai/airReport";
 import type { AirMonitoringType } from "@/lib/types";
 
@@ -95,10 +95,10 @@ export async function scanAirReportAction(
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     const result = await scanAirReport(base64, file.type);
     return { ok: true, result };
-  } catch {
+  } catch (err) {
     return {
       ok: false,
-      error: "Couldn't read that certificate. Enter the result manually.",
+      error: `Couldn't read that certificate — ${aiErrorReason(err)}. Enter the result manually.`,
     };
   }
 }

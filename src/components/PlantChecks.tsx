@@ -4,8 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logPlantCheck } from "@/app/(app)/projects/capture-actions";
 import { PLANT_TYPE_LABEL } from "@/lib/roles";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayISO } from "@/lib/format";
+import { enqueue } from "@/lib/offline/outbox";
+import { useOutbox } from "@/lib/offline/useOutbox";
 import type { PlantType } from "@/lib/types";
+
+const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
 
 export interface PlantRow {
   id: string;
@@ -39,21 +43,33 @@ export function PlantChecks({
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
 
+  // Plant checks queued while offline show as checked immediately.
+  const queued = useOutbox(projectId, ["plant_check"]);
+  const pendingIds = new Set(queued.map((i) => String(i.payload.plant_id)));
+
+  const queueCheck = (plantId: string) =>
+    enqueue("plant_check", projectId, { plant_id: plantId, check_date: todayISO() });
+
   const onCheck = (plantId: string) => {
+    if (isOffline()) {
+      queueCheck(plantId);
+      return;
+    }
     setBusy(plantId);
     startTransition(async () => {
-      await logPlantCheck(projectId, plantId);
-      setBusy(null);
-      router.refresh();
+      try {
+        await logPlantCheck(projectId, plantId);
+        router.refresh();
+      } catch {
+        queueCheck(plantId);
+      } finally {
+        setBusy(null);
+      }
     });
   };
 
   return (
-    <section className="card p-5">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
-        Plant &amp; Equipment
-      </h2>
-
+    <div>
       {/* Licensed-project gate (Rule 5) */}
       {gate.licensed && gate.requiredCount > 0 && (
         <div
@@ -96,6 +112,10 @@ export function PlantChecks({
               </div>
               {p.checkedToday ? (
                 <span className="pill pill-ok shrink-0">Checked ✓</span>
+              ) : pendingIds.has(p.id) ? (
+                <span className="pill pill-warn shrink-0" title="Saved on device — will sync">
+                  Checked · pending
+                </span>
               ) : (
                 <button
                   type="button"
@@ -122,6 +142,6 @@ export function PlantChecks({
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

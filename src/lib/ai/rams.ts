@@ -62,7 +62,9 @@ export function streamRams(facts: RamsFacts) {
 
   return client.messages.stream({
     model: AI_MODEL,
-    max_tokens: 8000,
+    // A full RAMS runs long; 8k truncated mid-document. 16k comfortably fits a
+    // complete draft. It streams, so the extra length arrives progressively.
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [
       {

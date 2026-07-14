@@ -1,6 +1,8 @@
 import { createClient } from "./supabase/server";
+import { createAdminClient, ADMIN_ENABLED } from "./supabase/admin";
 import { hasExpiredCert } from "./compliance";
 import { ACTIVE_PROJECT_STATUSES } from "./roles";
+import { isOfficeRole } from "./types";
 import type {
   Staff,
   Project,
@@ -16,6 +18,10 @@ import type {
   Profile,
   Incident,
   Audit,
+  SiteLog,
+  SiteVisitor,
+  SiteShift,
+  WorkArea,
 } from "./types";
 
 /** The signed-in user, their profile (tenant + role) and their company. */
@@ -32,7 +38,7 @@ export async function getMyContext(): Promise<{
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, company_id, app_role, is_platform_admin")
+    .select("id, company_id, app_role, is_platform_admin, staff_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -123,6 +129,22 @@ export async function getProjects(): Promise<Project[]> {
     .from("project")
     .select("*")
     .order("start_date", { ascending: true });
+  return (data as Project[]) ?? [];
+}
+
+/**
+ * Projects for the current user. Office roles see all the company's projects; a
+ * site supervisor sees only the jobs they're assigned to supervise.
+ */
+export async function getProjectsForUser(): Promise<Project[]> {
+  const { profile } = await getMyContext();
+  const supabase = createClient();
+  let query = supabase.from("project").select("*").order("start_date", { ascending: true });
+  if (profile && !isOfficeRole(profile.app_role)) {
+    // Site supervisor — only their assigned jobs (none until linked to a staff id).
+    query = query.eq("supervisor_id", profile.staff_id ?? "00000000-0000-0000-0000-000000000000");
+  }
+  const { data } = await query;
   return (data as Project[]) ?? [];
 }
 
@@ -232,6 +254,19 @@ export async function getProjectPlant(projectId: string): Promise<Plant[]> {
     .filter(Boolean);
 }
 
+/** The staff assigned to a project's team (office picks who's on the job). */
+export async function getProjectStaff(projectId: string): Promise<Staff[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_staff")
+    .select("staff(*)")
+    .eq("project_id", projectId);
+  const rows = (data as unknown as { staff: Staff | Staff[] }[]) ?? [];
+  return rows
+    .map((r) => (Array.isArray(r.staff) ? r.staff[0] : r.staff))
+    .filter(Boolean);
+}
+
 export async function getPlantChecks(
   projectId: string
 ): Promise<PlantDailyCheck[]> {
@@ -308,4 +343,67 @@ export async function getCloseout(
     .eq("project_id", projectId)
     .maybeSingle();
   return (data as ProjectCloseout) ?? null;
+}
+
+// ── Site diary + visitors ────────────────────────────────────────────────────
+export async function getSiteLog(projectId: string): Promise<SiteLog[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_log")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  return (data as SiteLog[]) ?? [];
+}
+
+export async function getVisitors(projectId: string): Promise<SiteVisitor[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_visitor")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  return (data as SiteVisitor[]) ?? [];
+}
+
+export async function getShiftForDate(
+  projectId: string,
+  date: string
+): Promise<SiteShift | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_shift")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("shift_date", date)
+    .maybeSingle();
+  return (data as SiteShift) ?? null;
+}
+
+// ── Work areas / enclosures ──────────────────────────────────────────────────
+export async function getWorkAreas(projectId: string): Promise<WorkArea[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("work_area")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+  return (data as WorkArea[]) ?? [];
+}
+
+/** A short-lived signed URL for a plan file in the private "plans" bucket. */
+export async function signPlanUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  // Prefer the service-role client so signing doesn't depend on storage RLS —
+  // uploads go through the same client, so this keeps read/write symmetric.
+  if (ADMIN_ENABLED) {
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from("plans").createSignedUrl(path, 3600);
+    if (data?.signedUrl) return data.signedUrl;
+  }
+  const supabase = createClient();
+  const { data } = await supabase.storage.from("plans").createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
 }

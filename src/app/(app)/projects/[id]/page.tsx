@@ -8,20 +8,37 @@ import {
   getRegisterForDate,
   getExposureForProject,
   getProjectPlant,
+  getAllPlant,
   getPlantChecks,
+  getSiteLog,
+  getVisitors,
+  getShiftForDate,
+  getWorkAreas,
+  getProjectStaff,
+  getMyContext,
+  signPlanUrl,
   staffNameMap,
 } from "@/lib/data";
 import { SiteRegister, type RegisterRow, type AvailableStaff } from "@/components/SiteRegister";
 import { ExposureCapture, type ExposureRow, type Operative } from "@/components/ExposureCapture";
 import { PlantChecks, type PlantRow, type PlantGate } from "@/components/PlantChecks";
+import { SiteDiary, type DiaryEntry } from "@/components/SiteDiary";
+import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
+import { ShiftControl } from "@/components/ShiftControl";
+import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
+import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
+import { SitePlant, type PlantOption } from "@/components/SitePlant";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { isOfficeRole } from "@/lib/types";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
   CLASSIFICATION_LABEL,
   STAFF_ROLE_SHORT,
   GATED_PLANT_TYPES,
+  PLANT_TYPE_LABEL,
 } from "@/lib/roles";
-import { isExpired, isExpiringSoon } from "@/lib/compliance";
+import { isExpired, isExpiringSoon, staffBlockReason, staffCertEvidence } from "@/lib/compliance";
 import { formatDate, gbp, todayISO } from "@/lib/format";
 import { AI_ENABLED } from "@/lib/ai/client";
 import { RamsDrafter } from "@/components/RamsDrafter";
@@ -37,14 +54,22 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, plantChecks] = await Promise.all([
-    getStaff(),
-    getRegisterForDate(project.id, today),
-    project.client_id ? getClient(project.client_id) : Promise.resolve(null),
-    getExposureForProject(project.id),
-    getProjectPlant(project.id),
-    getPlantChecks(project.id),
-  ]);
+  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx] =
+    await Promise.all([
+      getStaff(),
+      getRegisterForDate(project.id, today),
+      project.client_id ? getClient(project.client_id) : Promise.resolve(null),
+      getExposureForProject(project.id),
+      getProjectPlant(project.id),
+      getAllPlant(),
+      getPlantChecks(project.id),
+      getSiteLog(project.id),
+      getVisitors(project.id),
+      getShiftForDate(project.id, today),
+      getWorkAreas(project.id),
+      getProjectStaff(project.id),
+      getMyContext(),
+    ]);
 
   const names = staffNameMap(staff);
   const byId = new Map(staff.map((s) => [s.id, s]));
@@ -60,13 +85,29 @@ export default async function ProjectWorkspacePage({
       blockReason: e.block_reason,
       checkIn: e.check_in,
       checkOut: e.check_out,
+      rpe: e.rpe ?? null,
+      certs: s ? staffCertEvidence(s) : [],
     };
   });
 
+  const office = isOfficeRole(ctx.profile?.app_role);
+
+  // The register only offers the project's assigned team.
+  const teamIds = new Set(team.map((s) => s.id));
   const onRegister = new Set(register.map((e) => e.staff_id));
-  const available: AvailableStaff[] = staff
+  const available: AvailableStaff[] = team
     .filter((s) => !onRegister.has(s.id))
-    .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+    .map((s) => {
+      const reason = staffBlockReason(s);
+      return {
+        id: s.id,
+        name: s.name,
+        roleShort: STAFF_ROLE_SHORT[s.role],
+        blocked: Boolean(reason),
+        blockReason: reason,
+        certs: staffCertEvidence(s),
+      };
+    });
 
   // Exposure — operatives on site today (checked in, not blocked) can be logged.
   const operatives: Operative[] = register
@@ -103,6 +144,64 @@ export default async function ProjectWorkspacePage({
     gated: GATED_PLANT_TYPES.includes(p.type),
     checkedToday: checkedTodayIds.has(p.id),
   }));
+  // Site diary + visitors
+  const diaryEntries: DiaryEntry[] = siteLog.map((e) => ({
+    id: e.id,
+    logDate: e.log_date,
+    category: e.category,
+    note: e.note,
+    authorName: e.author_staff_id ? names.get(e.author_staff_id) ?? null : null,
+    createdAt: e.created_at,
+  }));
+  const visitorRows: VisitorRow[] = visitors.map((v) => ({
+    id: v.id,
+    name: v.name,
+    organisation: v.organisation,
+    purpose: v.purpose,
+    timeIn: v.time_in,
+    timeOut: v.time_out,
+  }));
+
+  const stillOnSite = register.filter((e) => e.check_in && !e.check_out && !e.blocked).length;
+  const shiftState = shift ? { startedAt: shift.started_at, endedAt: shift.ended_at } : null;
+  const todayLogged = siteLog.some((e) => e.log_date === today);
+  const plantCheckedToday = plant.filter((p) => checkedTodayIds.has(p.id)).length;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+  // Office plant assignment: what's on the job vs. the rest of the fleet.
+  const toPlantOption = (p: (typeof allPlant)[number]): PlantOption => ({
+    id: p.id,
+    assetId: p.asset_id,
+    label: p.name ?? PLANT_TYPE_LABEL[p.type],
+    certExpired: isExpired(p.cert_expiry),
+  });
+  const assignedPlantIds = new Set(plant.map((p) => p.id));
+  const assignedPlantOptions: PlantOption[] = plant.map(toPlantOption);
+  const addablePlantOptions: PlantOption[] = allPlant
+    .filter((p) => !assignedPlantIds.has(p.id))
+    .map(toPlantOption);
+
+  // Office team management: current team + who else can be added.
+  const teamMembers: TeamMember[] = team.map((s) => ({
+    id: s.id,
+    name: s.name,
+    roleShort: STAFF_ROLE_SHORT[s.role],
+  }));
+  const addableStaff: TeamMember[] = staff
+    .filter((s) => !teamIds.has(s.id))
+    .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+
+  const workAreaRows: WorkAreaRow[] = await Promise.all(
+    workAreas.map(async (a) => ({
+      id: a.id,
+      name: a.name,
+      location: a.location,
+      notes: a.notes,
+      hasPlan: Boolean(a.plan_path),
+      planUrl: await signPlanUrl(a.plan_path),
+    }))
+  );
+
   const gatedPlant = plant.filter((p) => GATED_PLANT_TYPES.includes(p.type));
   const gate: PlantGate = {
     licensed: project.classification === "licensed",
@@ -148,6 +247,14 @@ export default async function ProjectWorkspacePage({
             <Meta label="ASB5 notified" value={formatDate(project.asb5_notification_date)} />
           )}
         </dl>
+        {office && (
+          <Link
+            href={`/projects/${project.id}/edit`}
+            className="btn-secondary mt-3 w-full text-sm"
+          >
+            ✎ Edit project details
+          </Link>
+        )}
         {project.classification === "licensed" && (
           <p className="mt-3 rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-700">
             Licensed project — daily start-of-project plant checks (DCU / vacuum /
@@ -156,19 +263,97 @@ export default async function ProjectWorkspacePage({
         )}
       </section>
 
-      {/* Site register with cert-blocking */}
+      {/* On-site workspace — tidy tap-to-open sections. Shift + Register open by
+          default (done first on arrival); the rest tucked away to keep the page
+          short and easy to navigate one-handed. */}
       <div className="space-y-4">
-        <SiteRegister projectId={project.id} rows={rows} available={available} />
-        <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
-        <ExposureCapture
-          projectId={project.id}
-          operatives={operatives}
-          records={exposureRows}
-        />
+        <CollapsibleSection
+          title="Today's Shift"
+          defaultOpen
+          summary={shiftState ? (shiftState.endedAt ? "Ended" : "In progress") : "Not started"}
+        >
+          <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
+        </CollapsibleSection>
+
+        {office && (
+          <CollapsibleSection title="Site Team" summary={plural(teamMembers.length, "assigned")}>
+            <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
+          </CollapsibleSection>
+        )}
+
+        <CollapsibleSection
+          title="Work Areas & Plans"
+          summary={workAreaRows.length ? plural(workAreaRows.length, "area") : "None yet"}
+        >
+          <WorkAreas projectId={project.id} areas={workAreaRows} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Site Register · Today"
+          defaultOpen
+          summary={stillOnSite > 0 ? `${stillOnSite} on site` : "No one signed in"}
+        >
+          <SiteRegister projectId={project.id} rows={rows} available={available} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Plant & Equipment"
+          summary={plant.length ? `${plantCheckedToday}/${plant.length} checked today` : "None assigned"}
+        >
+          {office && (
+            <SitePlant
+              projectId={project.id}
+              assigned={assignedPlantOptions}
+              addable={addablePlantOptions}
+            />
+          )}
+          <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Exposure Log"
+          summary={exposureRows.length ? plural(exposureRows.length, "record") : "None yet"}
+        >
+          <ExposureCapture
+            projectId={project.id}
+            operatives={operatives}
+            records={exposureRows}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Site Diary"
+          summary={todayLogged ? plural(diaryEntries.length, "entry").replace("entrys", "entries") : "⚠ No log for today"}
+        >
+          <SiteDiary
+            projectId={project.id}
+            entries={diaryEntries}
+            staff={staff.map((s) => ({ id: s.id, name: s.name }))}
+            todayISO={today}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Visitors"
+          summary={visitorRows.length ? plural(visitorRows.length, "logged") : "None logged"}
+        >
+          <VisitorLog projectId={project.id} visitors={visitorRows} />
+        </CollapsibleSection>
 
         {AI_ENABLED && (
           <RamsDrafter projectId={project.id} reference={project.reference} />
         )}
+
+        {/* One-tap report — renders a branded PDF from whatever's been collected
+            so far, at any point in the job (not just at closeout). */}
+        <a
+          href={`/projects/${project.id}/closeout/pdf`}
+          target="_blank"
+          rel="noopener"
+          className="btn-secondary w-full"
+        >
+          ⤓ Download report (PDF)
+        </a>
 
         <Link href={`/projects/${project.id}/closeout`} className="btn-primary w-full">
           {project.status === "completed" ? "View closeout pack" : "Project closeout →"}

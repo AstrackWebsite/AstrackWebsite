@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { analyzeExposure } from "@/lib/ai/exposureInsights";
 import { getAllExposure, getProjects, getStaff, staffNameMap } from "@/lib/data";
 import { ASBESTOS_TYPE_LABEL } from "@/lib/roles";
@@ -43,7 +43,7 @@ export async function exposureInsightAction(): Promise<InsightState> {
 
     const result = await analyzeExposure(rows);
     return { ok: true, result };
-  } catch {
-    return { ok: false, error: "Couldn't generate insights. Please try again." };
+  } catch (err) {
+    return { ok: false, error: `Couldn't generate insights — ${aiErrorReason(err)}.` };
   }
 }

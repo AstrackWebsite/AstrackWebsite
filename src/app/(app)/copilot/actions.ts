@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { askCopilot } from "@/lib/ai/copilot";
 import { buildCompanySnapshot } from "@/lib/ai/snapshot";
 import type { ChatMsg, ChatReply } from "@/lib/ai/chatTypes";
@@ -40,7 +40,7 @@ export async function askCopilotAction(messages: ChatMsg[]): Promise<ChatReply> 
     const snapshot = await buildCompanySnapshot();
     const answer = await askCopilot(snapshot, clean);
     return { ok: true, answer };
-  } catch {
-    return { ok: false, error: "Sorry — I couldn't answer that just now. Try again." };
+  } catch (err) {
+    return { ok: false, error: `Sorry — ${aiErrorReason(err)}.` };
   }
 }

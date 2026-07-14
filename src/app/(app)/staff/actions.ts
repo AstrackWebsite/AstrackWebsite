@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STAFF_FORM_CONFIG, STAFF_FIELDS } from "@/lib/staffForm";
 import type { StaffRole } from "@/lib/types";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { scanCertificate, isScannable, type CertScanResult } from "@/lib/ai/certScan";
 
 const ROLES: StaffRole[] = [
@@ -96,10 +96,10 @@ export async function scanStaffCertificate(
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     const result = await scanCertificate(base64, file.type);
     return { ok: true, result };
-  } catch {
+  } catch (err) {
     return {
       ok: false,
-      error: "Couldn't read that certificate. Enter the dates manually.",
+      error: `Couldn't read that certificate — ${aiErrorReason(err)}. Enter the dates manually.`,
     };
   }
 }

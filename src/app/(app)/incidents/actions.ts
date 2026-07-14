@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AI_ENABLED } from "@/lib/ai/client";
+import { AI_ENABLED, aiErrorReason } from "@/lib/ai/client";
 import { draftIncident, type IncidentDraft } from "@/lib/ai/incidentAssist";
 import type { IncidentType, IncidentSeverity, IncidentStatus } from "@/lib/types";
 
@@ -81,8 +81,8 @@ export async function draftIncidentAction(
   try {
     const draft = await draftIncident(account);
     return { ok: true, draft };
-  } catch {
-    return { ok: false, error: "Couldn't draft that. Fill the form in manually." };
+  } catch (err) {
+    return { ok: false, error: `Couldn't draft that — ${aiErrorReason(err)}. Fill the form in manually.` };
   }
 }
 

@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/PageStub";
-import { getProjects, getStaff, staffNameMap } from "@/lib/data";
+import { getProjectsForUser, getStaff, getMyContext, staffNameMap } from "@/lib/data";
 import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
   CLASSIFICATION_LABEL,
 } from "@/lib/roles";
 import { formatDay } from "@/lib/format";
-import type { ProjectStatus } from "@/lib/types";
+import { isOfficeRole, type ProjectStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_ORDER: ProjectStatus[] = ["live", "setup", "pending", "completed"];
 
 export default async function ProjectsPage() {
-  const [projects, staff] = await Promise.all([getProjects(), getStaff()]);
+  const [projects, staff, ctx] = await Promise.all([
+    getProjectsForUser(),
+    getStaff(),
+    getMyContext(),
+  ]);
   const names = staffNameMap(staff);
+  const office = isOfficeRole(ctx.profile?.app_role);
 
   const counts = STATUS_ORDER.map((s) => ({
     status: s,
@@ -25,10 +30,12 @@ export default async function ProjectsPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <PageHeader title="Projects" />
-        <Link href="/projects/new" className="btn-primary px-4 py-2 text-sm">
-          + Add
-        </Link>
+        <PageHeader title={office ? "Projects" : "My Jobs"} />
+        {office && (
+          <Link href="/projects/new" className="btn-primary px-4 py-2 text-sm">
+            + Add
+          </Link>
+        )}
       </div>
 
       <div className="mb-5 grid grid-cols-4 gap-2">
@@ -44,7 +51,9 @@ export default async function ProjectsPage() {
 
       <div className="space-y-2">
         {projects.length === 0 && (
-          <p className="card p-4 text-sm text-ink-muted">No projects yet.</p>
+          <p className="card p-4 text-sm text-ink-muted">
+            {office ? "No projects yet." : "No jobs assigned to you yet."}
+          </p>
         )}
         {projects.map((p) => (
           <Link

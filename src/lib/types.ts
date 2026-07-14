@@ -26,6 +26,12 @@ export interface Profile {
   company_id: string | null;
   app_role: AppRole;
   is_platform_admin: boolean;
+  staff_id: string | null;
+}
+
+/** Office roles run the full app; site supervisors get the on-site view only. */
+export function isOfficeRole(role: AppRole | undefined | null): boolean {
+  return role === "admin" || role === "management";
 }
 
 export type ProjectClassification = "licensed" | "nnlw" | "general";
@@ -120,6 +126,8 @@ export interface SiteRegisterEntry {
   check_out: string | null;
   blocked: boolean;
   block_reason: string | null;
+  checklist: { label: string; checked: boolean }[] | null;
+  rpe: string | null;
   created_at: string;
 }
 
@@ -224,6 +232,52 @@ export interface Incident {
   reported_by_staff_id: string | null;
   status: IncidentStatus;
   investigation_outcome: string | null;
+  created_at: string;
+}
+
+export interface WorkArea {
+  id: string;
+  company_id: string;
+  project_id: string;
+  name: string;
+  location: string | null;
+  notes: string | null;
+  plan_path: string | null;
+  created_at: string;
+}
+
+export interface SiteShift {
+  id: string;
+  company_id: string;
+  project_id: string;
+  shift_date: string;
+  started_at: string;
+  ended_at: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface SiteLog {
+  id: string;
+  company_id: string;
+  project_id: string;
+  log_date: string;
+  author_staff_id: string | null;
+  category: string | null;
+  note: string;
+  created_at: string;
+}
+
+export interface SiteVisitor {
+  id: string;
+  company_id: string;
+  project_id: string;
+  visit_date: string;
+  name: string;
+  organisation: string | null;
+  purpose: string | null;
+  time_in: string | null;
+  time_out: string | null;
   created_at: string;
 }
 
