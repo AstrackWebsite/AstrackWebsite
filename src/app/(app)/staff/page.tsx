@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/PageStub";
 import { StaffList } from "@/components/StaffList";
+import { ScanFileCertificate } from "@/components/ScanFileCertificate";
 import { getStaff } from "@/lib/data";
+import { AI_ENABLED } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,12 @@ export default async function StaffPage({
           + Add
         </Link>
       </div>
+
+      {AI_ENABLED && (
+        <div className="mb-4">
+          <ScanFileCertificate staff={staff.map((s) => ({ id: s.id, name: s.name }))} />
+        </div>
+      )}
 
       <StaffList staff={staff} initialExpiredOnly={expiredOnly} />
     </>
