@@ -150,7 +150,7 @@ export function AddProjectForm({
                 onChange={() => setClassification(c)}
                 className="sr-only"
               />
-              {c === "licensed" ? "Licensed" : c === "nnlw" ? "Non-Licensed" : "General"}
+              {c === "licensed" ? "Licensed" : c === "nnlw" ? "NNLW" : "General"}
             </label>
           ))}
         </div>
