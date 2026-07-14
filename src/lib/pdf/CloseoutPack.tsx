@@ -34,6 +34,7 @@ export interface CloseoutData {
   handover: { label: string; done: boolean }[];
   handoverDocs: { type: string; title: string | null }[];
   register: { name: string; date: string; inOut: string; status: string }[];
+  rpe: { name: string; date: string; rpe: string; inspected: string; faceFit: string }[];
   exposure: { name: string; date: string; task: string; detail: string; twa: string }[];
   plantChecks: { asset: string; date: string; kind: string }[];
   air: { type: string; result: string; status: string; date: string }[];
@@ -170,6 +171,17 @@ export function CloseoutPack({ data }: { data: CloseoutData }) {
             <Table
               head={["Name", "Date", "In / Out", "Status"]}
               rows={data.register.map((r) => [r.name, r.date, r.inOut, r.status])}
+            />
+          </View>
+        )}
+
+        {/* RPE inspection records */}
+        {has("rpe") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>RPE Inspection Records</Text>
+            <Table
+              head={["Operative", "Date", "RPE worn", "Inspected", "Face-fit"]}
+              rows={data.rpe.map((r) => [r.name, r.date, r.rpe, r.inspected, r.faceFit])}
             />
           </View>
         )}

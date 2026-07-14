@@ -6,6 +6,7 @@ export const REPORT_SECTIONS = [
   { key: "handover", label: "Analyst handover checklist" },
   { key: "documents", label: "Handover documents (attached files)" },
   { key: "register", label: "Site register" },
+  { key: "rpe", label: "RPE inspection records" },
   { key: "exposure", label: "Personal exposure (TWA)" },
   { key: "plant", label: "Plant checks" },
   { key: "air", label: "Air monitoring" },

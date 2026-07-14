@@ -35,6 +35,17 @@ export interface BuiltPack {
   reference: string;
 }
 
+/** Read a yes/no from a register sign-in checklist by matching the item label. */
+function checklistFlag(
+  checklist: { label: string; checked: boolean }[] | null,
+  needle: string
+): string {
+  if (!checklist || checklist.length === 0) return "—";
+  const item = checklist.find((i) => i.label.toLowerCase().includes(needle));
+  if (!item) return "—";
+  return item.checked ? "Yes" : "No";
+}
+
 /**
  * Builds the closeout / compliance PDF for a project, optionally limited to a
  * chosen set of sections. Shared by the inline PDF route and the server action
@@ -111,6 +122,17 @@ export async function buildCloseoutPack(
         : `${formatTime(r.check_in)}${r.check_out ? " – " + formatTime(r.check_out) : ""}`,
       status: r.blocked ? `BLOCKED: ${r.block_reason ?? ""}` : r.check_out ? "Signed out" : "On site",
     })),
+    // RPE inspection evidence, drawn from each sign-in: the RPE worn and the
+    // supervisor's pre-sign-in checks (RPE serviceable, face-fit in date).
+    rpe: register
+      .filter((r) => r.rpe || (r.checklist && r.checklist.length > 0))
+      .map((r) => ({
+        name: names.get(r.staff_id) ?? "Unknown",
+        date: formatDate(r.entry_date),
+        rpe: r.rpe ?? "—",
+        inspected: checklistFlag(r.checklist, "inspected"),
+        faceFit: checklistFlag(r.checklist, "face-fit"),
+      })),
     exposure: exposure.map((e) => ({
       name: names.get(e.staff_id) ?? "Unknown",
       date: formatDate(e.entry_date),
