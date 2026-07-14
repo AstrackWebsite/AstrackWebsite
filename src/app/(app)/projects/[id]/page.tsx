@@ -15,6 +15,7 @@ import {
   getShiftForDate,
   getWorkAreas,
   getProjectStaff,
+  getCloseout,
   getMyContext,
   signPlanUrl,
   signAttachmentUrl,
@@ -55,7 +56,7 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx] =
+  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx, closeout] =
     await Promise.all([
       getStaff(),
       getRegisterForDate(project.id, today),
@@ -70,6 +71,7 @@ export default async function ProjectWorkspacePage({
       getWorkAreas(project.id),
       getProjectStaff(project.id),
       getMyContext(),
+      getCloseout(project.id),
     ]);
 
   const names = staffNameMap(staff);
@@ -360,9 +362,23 @@ export default async function ProjectWorkspacePage({
           ⤓ Download report (PDF)
         </a>
 
-        <Link href={`/projects/${project.id}/closeout`} className="btn-primary w-full">
-          {project.status === "completed" ? "View closeout pack" : "Project closeout →"}
-        </Link>
+        {(() => {
+          const awaitingReview =
+            Boolean(closeout?.submitted_for_review_at) && project.status !== "completed";
+          const label = project.status === "completed"
+            ? "View closeout pack"
+            : awaitingReview
+              ? (office ? "Review handover ▸ submitted" : "Handover submitted — awaiting office")
+              : "Project closeout →";
+          return (
+            <Link
+              href={`/projects/${project.id}/closeout`}
+              className={`w-full ${awaitingReview ? "btn-secondary border-warn-500/40 bg-warn-50 text-warn-700" : "btn-primary"}`}
+            >
+              {label}
+            </Link>
+          );
+        })()}
       </div>
     </>
   );

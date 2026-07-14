@@ -317,6 +317,7 @@ export interface ProjectCloseout {
   client_rating: number | null;
   client_comments: string | null;
   closeout_pdf_url: string | null;
+  submitted_for_review_at: string | null;
   completed_at: string | null;
   created_at: string;
 }
