@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addSiteLog } from "@/app/(app)/projects/site-log-actions";
 import { formatDate, formatTime, todayISO as getToday } from "@/lib/format";
@@ -51,6 +51,20 @@ export function SiteDiary({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // One hidden file input, three ways in: camera, gallery image, or a PDF.
+  // We flip the accept/capture attributes just before opening the picker so the
+  // OS shows the right chooser each time.
+  const pickAttachment = (accept: string, capture?: string) => {
+    const el = fileRef.current;
+    if (!el) return;
+    el.accept = accept;
+    if (capture) el.setAttribute("capture", capture);
+    else el.removeAttribute("capture");
+    el.value = "";
+    el.click();
+  };
 
   const staffName = new Map(staff.map((s) => [s.id, s.name]));
   const queued = useOutbox(projectId, ["site_log"]);
@@ -138,19 +152,55 @@ export function SiteDiary({
             </select>
           </div>
           <div>
-            <label className="label">Photo or PDF (optional)</label>
-            <label className="btn-secondary w-full cursor-pointer text-center">
-              {fileName || "📷 Take photo / attach PDF"}
-              <input
-                type="file"
-                name="attachment"
-                accept="image/*,application/pdf"
-                className="sr-only"
-                onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
-              />
-            </label>
+            <label className="label">Attachment (optional)</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => pickAttachment("image/*", "environment")}
+                className="btn-secondary flex flex-col items-center gap-1 px-2 py-3 text-xs"
+              >
+                <span className="text-lg">📷</span> Take photo
+              </button>
+              <button
+                type="button"
+                onClick={() => pickAttachment("image/*")}
+                className="btn-secondary flex flex-col items-center gap-1 px-2 py-3 text-xs"
+              >
+                <span className="text-lg">🖼️</span> Choose image
+              </button>
+              <button
+                type="button"
+                onClick={() => pickAttachment("application/pdf")}
+                className="btn-secondary flex flex-col items-center gap-1 px-2 py-3 text-xs"
+              >
+                <span className="text-lg">📄</span> Attach PDF
+              </button>
+            </div>
+            {/* Single hidden input the three buttons drive. */}
+            <input
+              ref={fileRef}
+              type="file"
+              name="attachment"
+              className="sr-only"
+              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+            />
+            {fileName && (
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
+                <span className="min-w-0 truncate text-sm text-ink">{fileName}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFileName("");
+                    if (fileRef.current) fileRef.current.value = "";
+                  }}
+                  className="shrink-0 text-sm font-medium text-danger-600"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
             <p className="mt-1 text-xs text-ink-faint">
-              Camera, gallery or a PDF · up to 15MB. Needs a connection to upload.
+              Photo, image or PDF · up to 15MB. Needs a connection to upload.
             </p>
           </div>
           {error && (
