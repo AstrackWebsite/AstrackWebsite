@@ -357,6 +357,47 @@ export async function getIncident(id: string): Promise<Incident | null> {
 }
 
 // ── Closeout ───────────────────────────────────────────────────────────────
+export interface HandoverAwaitingReview {
+  projectId: string;
+  reference: string;
+  address: string;
+  submittedAt: string;
+}
+
+/**
+ * Project handovers a supervisor has submitted that are still awaiting office
+ * sign-off — i.e. submitted for review but not yet completed. Company-scoped by
+ * RLS. Used to alert the office/admin that something needs their attention.
+ */
+export async function getHandoversAwaitingReview(): Promise<
+  HandoverAwaitingReview[]
+> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("project_closeout")
+    .select(
+      "project_id, submitted_for_review_at, completed_at, project:project_id(reference, address)"
+    )
+    .not("submitted_for_review_at", "is", null)
+    .is("completed_at", null)
+    .order("submitted_for_review_at", { ascending: true });
+
+  return (
+    (data as
+      | {
+          project_id: string;
+          submitted_for_review_at: string;
+          project: { reference: string; address: string } | null;
+        }[]
+      | null) ?? []
+  ).map((row) => ({
+    projectId: row.project_id,
+    reference: row.project?.reference ?? "—",
+    address: row.project?.address ?? "—",
+    submittedAt: row.submitted_for_review_at,
+  }));
+}
+
 export async function getCloseout(
   projectId: string
 ): Promise<ProjectCloseout | null> {
