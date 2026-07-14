@@ -11,9 +11,11 @@ import {
   getPlantChecks,
   getAirMonitoringForProject,
   getCloseout,
+  getCloseoutDocuments,
   getMyContext,
   staffNameMap,
 } from "@/lib/data";
+import { CLOSEOUT_DOC_LABEL } from "@/lib/closeoutDocs";
 import { CloseoutPack, type CloseoutData } from "@/lib/pdf/CloseoutPack";
 import {
   CLASSIFICATION_LABEL,
@@ -38,7 +40,7 @@ export async function GET(
   const project = await getProjectById(params.id);
   if (!project) return new Response("Not found", { status: 404 });
 
-  const [ctx, staff, client, register, exposure, plant, checks, air, closeout] =
+  const [ctx, staff, client, register, exposure, plant, checks, air, closeout, handoverDocs] =
     await Promise.all([
       getMyContext(),
       getStaff(),
@@ -49,6 +51,7 @@ export async function GET(
       getPlantChecks(project.id),
       getAirMonitoringForProject(project.id),
       getCloseout(project.id),
+      getCloseoutDocuments(project.id),
     ]);
 
   const names = staffNameMap(staff);
@@ -84,6 +87,10 @@ export async function GET(
       { label: "4-stage clearance commenced", done: Boolean(closeout?.four_stage_clearance_commenced) },
       { label: "Certificate of reoccupation received", done: Boolean(closeout?.cert_reoccupation_received) },
     ],
+    handoverDocs: handoverDocs.map((d) => ({
+      type: CLOSEOUT_DOC_LABEL[d.doc_type] ?? "Document",
+      title: d.title,
+    })),
     register: register.map((r) => ({
       name: names.get(r.staff_id) ?? "Unknown",
       date: formatDate(r.entry_date),

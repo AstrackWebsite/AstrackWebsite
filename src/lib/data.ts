@@ -6,6 +6,7 @@ import { isOfficeRole } from "./types";
 import type {
   Staff,
   StaffCertificate,
+  CloseoutDocument,
   Project,
   Client,
   SiteRegisterEntry,
@@ -233,6 +234,17 @@ export async function getAllExposure(): Promise<ExposureRecord[]> {
     .select("*")
     .order("entry_date", { ascending: false });
   return (data as ExposureRecord[]) ?? [];
+}
+
+/** Handover documents attached to a project (most recent first). */
+export async function getCloseoutDocuments(projectId: string): Promise<CloseoutDocument[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("closeout_document")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("uploaded_at", { ascending: false });
+  return (data as CloseoutDocument[]) ?? [];
 }
 
 /** Uploaded certificate documents for a staff member (most recent first). */
