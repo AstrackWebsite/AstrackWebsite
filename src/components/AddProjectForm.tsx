@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { createProject, updateProject } from "@/app/(app)/projects/actions";
-import { CLASSIFICATION_LABEL } from "@/lib/roles";
+import { CLASSIFICATION_LABEL, NOTIFICATION_FORM } from "@/lib/roles";
 import type { Staff, ProjectClassification } from "@/lib/types";
 
 const initialState: { error?: string } = {};
@@ -156,15 +156,15 @@ export function AddProjectForm({
         </div>
 
         <p className="text-xs text-ink-muted">
-          {classification === "licensed"
-            ? "Licensed work requires an ASB5 notification and RAMS. Record the ASB5 date when you have it — it won't block setup."
+          {NOTIFICATION_FORM[classification]
+            ? `${CLASSIFICATION_LABEL[classification]} work requires an ${NOTIFICATION_FORM[classification]} notification and RAMS. Record the ${NOTIFICATION_FORM[classification]} date when you have it — it won't block setup.`
             : `${CLASSIFICATION_LABEL[classification]} work requires RAMS.`}
         </p>
 
-        {classification === "licensed" && (
+        {NOTIFICATION_FORM[classification] && (
           <Field
             name="asb5_notification_date"
-            label="ASB5 notification date (optional)"
+            label={`${NOTIFICATION_FORM[classification]} notification date (optional)`}
             type="date"
             defaultValue={dateVal(initial?.asb5_notification_date ?? null)}
           />

@@ -36,6 +36,7 @@ import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_PILL,
   CLASSIFICATION_LABEL,
+  NOTIFICATION_FORM,
   STAFF_ROLE_SHORT,
   GATED_PLANT_TYPES,
   PLANT_TYPE_LABEL,
@@ -250,8 +251,11 @@ export default async function ProjectWorkspacePage({
           />
           <Meta label="Start" value={formatDate(project.start_date)} />
           <Meta label="End" value={formatDate(project.end_date)} />
-          {project.classification === "licensed" && (
-            <Meta label="ASB5 notified" value={formatDate(project.asb5_notification_date)} />
+          {NOTIFICATION_FORM[project.classification] && (
+            <Meta
+              label={`${NOTIFICATION_FORM[project.classification]} notified`}
+              value={formatDate(project.asb5_notification_date)}
+            />
           )}
         </dl>
         {office && (

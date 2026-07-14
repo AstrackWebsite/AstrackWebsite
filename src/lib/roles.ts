@@ -62,6 +62,17 @@ export const CLASSIFICATION_LABEL: Record<ProjectClassification, string> = {
   general: "General",
 };
 
+/**
+ * HSE notification form for each project type. Licensed work is notified on
+ * ASB5; notifiable non-licensed work (NNLW) on ASBNNLW1. General work is not
+ * notifiable, so it has no form.
+ */
+export const NOTIFICATION_FORM: Partial<Record<ProjectClassification, string>> =
+  {
+    licensed: "ASB5",
+    nnlw: "ASBNNLW1",
+  };
+
 /** Projects counted as "active" for dashboard KPIs = anything not completed. */
 export const ACTIVE_PROJECT_STATUSES: ProjectStatus[] = [
   "pending",

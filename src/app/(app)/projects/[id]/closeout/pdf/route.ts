@@ -20,6 +20,7 @@ import { CloseoutPack, type CloseoutData } from "@/lib/pdf/CloseoutPack";
 import { mergeCloseoutDocs } from "@/lib/pdf/mergeCloseoutDocs";
 import {
   CLASSIFICATION_LABEL,
+  NOTIFICATION_FORM,
   PROJECT_STATUS_LABEL,
   AIR_MONITORING_TYPE_LABEL,
 } from "@/lib/roles";
@@ -75,6 +76,7 @@ export async function GET(
       start: formatDate(project.start_date),
       end: formatDate(project.end_date),
       asb5: project.asb5_notification_date ? formatDate(project.asb5_notification_date) : null,
+      notificationForm: NOTIFICATION_FORM[project.classification] ?? "ASB5",
       contractValue: gbp(project.contract_value),
       cm: (project.contracts_manager_id && names.get(project.contracts_manager_id)) || "—",
       supervisor: (project.supervisor_id && names.get(project.supervisor_id)) || "—",

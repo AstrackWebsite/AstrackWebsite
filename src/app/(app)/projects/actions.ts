@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { staffBlockReason } from "@/lib/compliance";
 import { todayISO } from "@/lib/format";
 import type { ProjectClassification, Staff } from "@/lib/types";
+import { NOTIFICATION_FORM } from "@/lib/roles";
 
 const CLASSIFICATIONS: ProjectClassification[] = ["licensed", "nnlw", "general"];
 
@@ -34,10 +35,11 @@ export async function createProject(_prev: unknown, formData: FormData) {
   if (!supervisor_id) return { error: "Choose a supervisor." };
   if (!clientName) return { error: "Client name is required." };
 
-  // ASB5 notification date is recorded for licensed work but never blocks
-  // creating the project — it can be entered later once notified.
+  // Notification date (ASB5 for licensed, ASBNNLW1 for NNLW) is recorded for
+  // notifiable work but never blocks creating the project — it can be entered
+  // later once notified.
   let asb5_notification_date: string | null = null;
-  if (classification === "licensed") {
+  if (NOTIFICATION_FORM[classification]) {
     asb5_notification_date = get("asb5_notification_date") || null;
   }
 
@@ -125,7 +127,7 @@ export async function updateProject(
   if (!clientName) return { error: "Client name is required." };
 
   let asb5_notification_date: string | null = null;
-  if (classification === "licensed") {
+  if (NOTIFICATION_FORM[classification]) {
     asb5_notification_date = get("asb5_notification_date") || null;
   }
 
