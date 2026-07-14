@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   saveCloseout,
   completeProject,
+  submitCloseoutForReview,
+  sendCloseoutBack,
   draftCloseoutSummaryAction,
 } from "@/app/(app)/projects/closeout-actions";
+import { formatDate } from "@/lib/format";
 import type { ProjectCloseout } from "@/lib/types";
 
 const HANDOVER: { key: keyof ProjectCloseout; label: string }[] = [
@@ -28,11 +31,15 @@ export function CloseoutForm({
   closeout,
   completed,
   aiEnabled,
+  isOffice,
+  submittedAt,
 }: {
   projectId: string;
   closeout: ProjectCloseout | null;
   completed: boolean;
   aiEnabled: boolean;
+  isOffice: boolean;
+  submittedAt: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -79,6 +86,24 @@ export function CloseoutForm({
     });
   };
 
+  const doSubmit = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await submitCloseoutForReview(projectId, buildForm());
+      if (res?.error) setError(res.error);
+      else router.refresh();
+    });
+  };
+
+  const doSendBack = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await sendCloseoutBack(projectId);
+      if (res?.error) setError(res.error);
+      else router.refresh();
+    });
+  };
+
   const toggle = (k: string) =>
     setFlags((f) => ({ ...f, [k]: !f[k] }));
 
@@ -98,6 +123,21 @@ export function CloseoutForm({
           >
             Download closeout pack (PDF)
           </a>
+        </div>
+      )}
+
+      {!completed && submittedAt && (
+        <div className="rounded-card border border-warn-500/30 bg-warn-50 p-4">
+          <p className="font-semibold text-warn-700">Submitted for office review</p>
+          <p className="text-sm text-warn-700">
+            Sent {formatDate(submittedAt.slice(0, 10))} —{" "}
+            {isOffice ? "review and complete below." : "awaiting office sign-off."}
+          </p>
+          {isOffice && (
+            <button type="button" onClick={doSendBack} disabled={pending} className="btn-secondary mt-3">
+              Send back to supervisor
+            </button>
+          )}
         </div>
       )}
 
@@ -187,15 +227,27 @@ export function CloseoutForm({
           <button type="button" onClick={doSave} disabled={pending} className="btn-secondary flex-1">
             Save progress
           </button>
-          <button
-            type="button"
-            onClick={doComplete}
-            disabled={pending || !canComplete}
-            className="btn-primary flex-1 disabled:opacity-50"
-            title={canComplete ? "" : "Check all handover & sign-off items first"}
-          >
-            Complete Project
-          </button>
+          {isOffice ? (
+            <button
+              type="button"
+              onClick={doComplete}
+              disabled={pending || !canComplete}
+              className="btn-primary flex-1 disabled:opacity-50"
+              title={canComplete ? "" : "Check all handover & sign-off items first"}
+            >
+              Complete Project
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={doSubmit}
+              disabled={pending || !canComplete}
+              className="btn-primary flex-1 disabled:opacity-50"
+              title={canComplete ? "" : "Check all handover & sign-off items first"}
+            >
+              {submittedAt ? "Re-submit to office" : "Submit to office"}
+            </button>
+          )}
         </div>
       )}
     </div>

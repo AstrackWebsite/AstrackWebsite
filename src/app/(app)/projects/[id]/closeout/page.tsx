@@ -1,8 +1,9 @@
 import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
-import { getProjectById, getCloseout, getCloseoutDocuments, signAttachmentUrl } from "@/lib/data";
+import { getProjectById, getCloseout, getCloseoutDocuments, getMyContext, signAttachmentUrl } from "@/lib/data";
 import { CloseoutForm } from "@/components/CloseoutForm";
 import { CloseoutDocuments, type CloseoutDocRow } from "@/components/CloseoutDocuments";
+import { isOfficeRole } from "@/lib/types";
 import { AI_ENABLED } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +15,9 @@ export default async function CloseoutPage({
 }) {
   const project = await getProjectById(params.id);
   if (!project) notFound();
-  const closeout = await getCloseout(project.id);
+  const [closeout, ctx] = await Promise.all([getCloseout(project.id), getMyContext()]);
   const completed = project.status === "completed" || Boolean(closeout?.completed_at);
+  const isOffice = isOfficeRole(ctx.profile?.app_role);
 
   const docs = await getCloseoutDocuments(project.id);
   const docRows: CloseoutDocRow[] = await Promise.all(
@@ -48,6 +50,8 @@ export default async function CloseoutPage({
         closeout={closeout}
         completed={completed}
         aiEnabled={AI_ENABLED}
+        isOffice={isOffice}
+        submittedAt={closeout?.submitted_for_review_at ?? null}
       />
 
       <div className="mt-4">

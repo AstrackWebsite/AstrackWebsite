@@ -106,9 +106,65 @@ export async function saveCloseout(projectId: string, formData: FormData) {
 }
 
 /**
+ * Supervisor submits the handover to the office for review. Saves the checklist
+ * and flags it as awaiting office sign-off — it does NOT complete the job. Any
+ * company member (including a site supervisor) may do this.
+ */
+export async function submitCloseoutForReview(projectId: string, formData: FormData) {
+  const bool = (k: string) => formData.get(k) === "on" || formData.get(k) === "true";
+
+  for (const item of HANDOVER_ITEMS) {
+    if (!bool(item))
+      return { error: "Check every handover item before submitting to the office." };
+  }
+  if (!bool("site_clearance_confirmed"))
+    return { error: "Confirm site clearance before submitting." };
+  if (!bool("documentation_confirmed"))
+    return { error: "Confirm all documentation is uploaded before submitting." };
+
+  const rating = Number(formData.get("client_rating") ?? 0);
+  const supabase = createClient();
+  const { error } = await supabase.from("project_closeout").upsert(
+    {
+      project_id: projectId,
+      plan_of_work_delivered: true,
+      air_monitoring_complete: true,
+      four_stage_clearance_commenced: true,
+      cert_reoccupation_received: true,
+      site_clearance_confirmed: true,
+      documentation_confirmed: true,
+      client_rating: rating >= 1 && rating <= 5 ? rating : null,
+      client_comments: String(formData.get("client_comments") ?? "").trim() || null,
+      submitted_for_review_at: new Date().toISOString(),
+    },
+    { onConflict: "project_id" }
+  );
+
+  if (error) {
+    if (error.code === "42501") return { error: "You don't have access to submit this." };
+    return { error: "Could not submit for review." };
+  }
+  revalidatePath(`/projects/${projectId}/closeout`);
+  return { ok: true };
+}
+
+/** Office sends a submitted closeout back to the supervisor (clears the flag). */
+export async function sendCloseoutBack(projectId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("project_closeout")
+    .update({ submitted_for_review_at: null })
+    .eq("project_id", projectId);
+  if (error) return { error: "Could not send it back." };
+  revalidatePath(`/projects/${projectId}/closeout`);
+  return { ok: true };
+}
+
+/**
  * Complete the project (Rule 6). Handover cannot proceed until every analyst
  * handover item + site clearance + documentation are confirmed. On success the
  * project is marked completed and the closeout PDF pack becomes available.
+ * Office/management only (the project status update is management-gated by RLS).
  */
 export async function completeProject(projectId: string, formData: FormData) {
   const bool = (k: string) => formData.get(k) === "on" || formData.get(k) === "true";
