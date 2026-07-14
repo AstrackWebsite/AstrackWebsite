@@ -9,7 +9,7 @@ import {
   staffNameMap,
   getStaff,
 } from "@/lib/data";
-import { CLASSIFICATION_LABEL } from "@/lib/roles";
+import { CLASSIFICATION_LABEL, NOTIFICATION_FORM } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     address: project.address,
     reference: project.reference,
     classification: CLASSIFICATION_LABEL[project.classification] ?? project.classification,
+    notificationForm: NOTIFICATION_FORM[project.classification] ?? null,
     asb5Date: project.asb5_notification_date,
     startDate: project.start_date,
     endDate: project.end_date,

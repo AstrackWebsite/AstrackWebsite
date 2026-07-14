@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { staffBlockReason } from "@/lib/compliance";
 import { todayISO } from "@/lib/format";
 import type { ProjectClassification, Staff } from "@/lib/types";
+import { NOTIFICATION_FORM } from "@/lib/roles";
 
 const CLASSIFICATIONS: ProjectClassification[] = ["licensed", "nnlw", "general"];
 
@@ -34,22 +35,12 @@ export async function createProject(_prev: unknown, formData: FormData) {
   if (!supervisor_id) return { error: "Choose a supervisor." };
   if (!clientName) return { error: "Client name is required." };
 
-  // Rule 3 + HSE rule: Licensed jobs need an ASB5 notification date, and it
-  // must be at least 14 days before the start date.
+  // Notification date (ASB5 for licensed, ASBNNLW1 for NNLW) is recorded for
+  // notifiable work but never blocks creating the project — it can be entered
+  // later once notified.
   let asb5_notification_date: string | null = null;
-  if (classification === "licensed") {
-    asb5_notification_date = get("asb5_notification_date");
-    if (!asb5_notification_date)
-      return { error: "Licensed projects require an ASB5 notification date." };
-    const gapDays =
-      (new Date(start_date).getTime() -
-        new Date(asb5_notification_date).getTime()) /
-      86_400_000;
-    if (gapDays < 14)
-      return {
-        error:
-          "HSE rule: ASB5 notification must be at least 14 days before the start date.",
-      };
+  if (NOTIFICATION_FORM[classification]) {
+    asb5_notification_date = get("asb5_notification_date") || null;
   }
 
   const contractRaw = get("contract_value");
@@ -136,19 +127,8 @@ export async function updateProject(
   if (!clientName) return { error: "Client name is required." };
 
   let asb5_notification_date: string | null = null;
-  if (classification === "licensed") {
-    asb5_notification_date = get("asb5_notification_date");
-    if (!asb5_notification_date)
-      return { error: "Licensed projects require an ASB5 notification date." };
-    const gapDays =
-      (new Date(start_date).getTime() -
-        new Date(asb5_notification_date).getTime()) /
-      86_400_000;
-    if (gapDays < 14)
-      return {
-        error:
-          "HSE rule: ASB5 notification must be at least 14 days before the start date.",
-      };
+  if (NOTIFICATION_FORM[classification]) {
+    asb5_notification_date = get("asb5_notification_date") || null;
   }
 
   const contractRaw = get("contract_value");

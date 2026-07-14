@@ -19,6 +19,7 @@ export interface CloseoutData {
     start: string;
     end: string;
     asb5: string | null;
+    notificationForm: string;
     contractValue: string;
     cm: string;
     supervisor: string;
@@ -117,7 +118,7 @@ export function CloseoutPack({ data }: { data: CloseoutData }) {
             <Meta label="Supervisor" value={p.supervisor} />
             <Meta label="Start" value={p.start} />
             <Meta label="End" value={p.end} />
-            {p.asb5 && <Meta label="ASB5 notified" value={p.asb5} />}
+            {p.asb5 && <Meta label={`${p.notificationForm} notified`} value={p.asb5} />}
             <Meta label="Client" value={data.client?.name ?? "—"} />
           </View>
         </View>
