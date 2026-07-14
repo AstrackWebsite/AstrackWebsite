@@ -25,21 +25,23 @@ body {
   .btn-primary {
     @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
            bg-navy-600 px-5 py-3 text-base font-semibold text-white
-           transition-colors active:bg-navy-700 disabled:opacity-50;
+           transition active:bg-navy-700 active:scale-[0.97]
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-secondary {
     @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
            border border-surface-border bg-surface px-5 py-3 text-base
-           font-semibold text-navy-600 transition-colors active:bg-surface-muted;
+           font-semibold text-navy-600 transition active:bg-surface-muted
+           active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none;
   }
 
   /* Teal brand CTA — used for primary marketing actions */
   .btn-accent {
     @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
            bg-accent-600 px-5 py-3 text-base font-semibold text-white
-           transition-colors hover:bg-accent-700 active:bg-accent-700
-           disabled:opacity-50;
+           transition hover:bg-accent-700 active:bg-accent-700
+           active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .link-accent {
