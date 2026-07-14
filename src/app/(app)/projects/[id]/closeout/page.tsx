@@ -1,8 +1,16 @@
 import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
-import { getProjectById, getCloseout, getCloseoutDocuments, getMyContext, signAttachmentUrl } from "@/lib/data";
+import {
+  getProjectById,
+  getCloseout,
+  getCloseoutDocuments,
+  getProjectReports,
+  getMyContext,
+  signAttachmentUrl,
+} from "@/lib/data";
 import { CloseoutForm } from "@/components/CloseoutForm";
 import { CloseoutDocuments, type CloseoutDocRow } from "@/components/CloseoutDocuments";
+import { ReportGenerator, type SavedReportRow } from "@/components/ReportGenerator";
 import { isOfficeRole } from "@/lib/types";
 import { AI_ENABLED } from "@/lib/ai/client";
 
@@ -29,6 +37,20 @@ export default async function CloseoutPage({
       url: await signAttachmentUrl(d.file_path),
     }))
   );
+
+  // Office/admin get the section-selectable report generator + filed copies.
+  const reportRows: SavedReportRow[] = isOffice
+    ? await Promise.all(
+        (await getProjectReports(project.id)).map(async (r) => ({
+          id: r.id,
+          audience: r.audience,
+          sections: r.sections,
+          title: r.title,
+          generatedAt: r.generated_at,
+          url: await signAttachmentUrl(r.file_path),
+        }))
+      )
+    : [];
 
   return (
     <>
@@ -57,6 +79,12 @@ export default async function CloseoutPage({
       <div className="mt-4">
         <CloseoutDocuments projectId={project.id} docs={docRows} />
       </div>
+
+      {isOffice && (
+        <div className="mt-4">
+          <ReportGenerator projectId={project.id} reports={reportRows} />
+        </div>
+      )}
     </>
   );
 }

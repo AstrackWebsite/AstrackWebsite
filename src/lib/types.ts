@@ -305,6 +305,18 @@ export interface SiteVisitor {
   created_at: string;
 }
 
+export interface ProjectReport {
+  id: string;
+  company_id: string;
+  project_id: string;
+  audience: "office" | "client";
+  sections: string[];
+  title: string | null;
+  file_path: string;
+  generated_by: string | null;
+  generated_at: string;
+}
+
 export interface ProjectCloseout {
   id: string;
   project_id: string;

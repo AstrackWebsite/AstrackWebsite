@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/PageStub";
 import { KpiTile } from "@/components/KpiTile";
-import { getStaff, getProjects, staffNameMap, getMyContext } from "@/lib/data";
+import {
+  getStaff,
+  getProjects,
+  staffNameMap,
+  getMyContext,
+  getHandoversAwaitingReview,
+} from "@/lib/data";
 import { hasExpiredCert } from "@/lib/compliance";
 import { ACTIVE_PROJECT_STATUSES, PROJECT_STATUS_LABEL, PROJECT_STATUS_PILL } from "@/lib/roles";
+import { isOfficeRole } from "@/lib/types";
 import { gbpCompact, formatDay } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +22,11 @@ export default async function DashboardPage() {
     getMyContext(),
   ]);
   const names = staffNameMap(staff);
+
+  // Office/admin get alerted to handovers a supervisor has submitted and that
+  // are still waiting on office sign-off.
+  const isOffice = isOfficeRole(ctx.profile?.app_role);
+  const awaitingReview = isOffice ? await getHandoversAwaitingReview() : [];
 
   const activeProjects = projects.filter((p) =>
     ACTIVE_PROJECT_STATUSES.includes(p.status)
@@ -28,6 +40,41 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title="Overview" subtitle={ctx.company?.name ?? undefined} />
+
+      {awaitingReview.length > 0 && (
+        <section className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4">
+          <div className="flex items-center gap-2">
+            <span className="pill pill-warn">{awaitingReview.length}</span>
+            <h2 className="text-sm font-semibold text-amber-900">
+              {awaitingReview.length === 1
+                ? "Handover awaiting your sign-off"
+                : "Handovers awaiting your sign-off"}
+            </h2>
+          </div>
+          <p className="mt-1 text-xs text-amber-800">
+            Submitted by site and ready for office review.
+          </p>
+          <div className="mt-3 space-y-2">
+            {awaitingReview.map((h) => (
+              <Link
+                key={h.projectId}
+                href={`/projects/${h.projectId}/closeout`}
+                className="block rounded-lg bg-white p-3 shadow-sm active:bg-surface-muted"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-semibold text-ink">{h.address}</span>
+                  <span className="whitespace-nowrap text-xs text-ink-muted">
+                    {formatDay(h.submittedAt)}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {h.reference} · Review &amp; sign off →
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <KpiTile value={staff.length} label="Staff" href="/staff" />

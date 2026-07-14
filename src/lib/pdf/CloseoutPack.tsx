@@ -6,11 +6,17 @@ import {
   View,
   StyleSheet,
 } from "@react-pdf/renderer";
+import type { ReportSectionKey } from "@/lib/closeoutSections";
+import { ALL_SECTION_KEYS } from "@/lib/closeoutSections";
 
 export interface CloseoutData {
   companyName: string;
   reportKind: string;
   generatedAt: string;
+  /** Which sections to include. Absent = all (back-compat with the full pack). */
+  sections?: ReportSectionKey[];
+  /** Optional audience note shown under the title, e.g. "Client copy". */
+  audienceNote?: string;
   project: {
     reference: string;
     address: string;
@@ -28,6 +34,7 @@ export interface CloseoutData {
   handover: { label: string; done: boolean }[];
   handoverDocs: { type: string; title: string | null }[];
   register: { name: string; date: string; inOut: string; status: string }[];
+  rpe: { name: string; date: string; rpe: string; inspected: string; faceFit: string }[];
   exposure: { name: string; date: string; task: string; detail: string; twa: string }[];
   plantChecks: { asset: string; date: string; kind: string }[];
   air: { type: string; result: string; status: string; date: string }[];
@@ -96,6 +103,8 @@ function Table({
 
 export function CloseoutPack({ data }: { data: CloseoutData }) {
   const p = data.project;
+  const sections = data.sections ?? ALL_SECTION_KEYS;
+  const has = (k: ReportSectionKey) => sections.includes(k);
   return (
     <Document title={`${data.reportKind} — ${p.reference}`}>
       <Page size="A4" style={s.page}>
@@ -106,90 +115,118 @@ export function CloseoutPack({ data }: { data: CloseoutData }) {
         <Text style={s.h1}>{p.address}</Text>
         <Text style={s.sub}>
           {p.reference} · {p.classification} · Generated {data.generatedAt}
+          {data.audienceNote ? ` · ${data.audienceNote}` : ""}
         </Text>
 
         {/* Project details */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Project</Text>
-          <View style={s.metaGrid}>
-            <Meta label="Status" value={p.status} />
-            <Meta label="Contract value" value={p.contractValue} />
-            <Meta label="Contracts manager" value={p.cm} />
-            <Meta label="Supervisor" value={p.supervisor} />
-            <Meta label="Start" value={p.start} />
-            <Meta label="End" value={p.end} />
-            {p.asb5 && <Meta label={`${p.notificationForm} notified`} value={p.asb5} />}
-            <Meta label="Client" value={data.client?.name ?? "—"} />
+        {has("details") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Project</Text>
+            <View style={s.metaGrid}>
+              <Meta label="Status" value={p.status} />
+              <Meta label="Contract value" value={p.contractValue} />
+              <Meta label="Contracts manager" value={p.cm} />
+              <Meta label="Supervisor" value={p.supervisor} />
+              <Meta label="Start" value={p.start} />
+              <Meta label="End" value={p.end} />
+              {p.asb5 && <Meta label={`${p.notificationForm} notified`} value={p.asb5} />}
+              <Meta label="Client" value={data.client?.name ?? "—"} />
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Analyst handover */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Analyst Handover</Text>
-          {data.handover.map((h, i) => (
-            <View key={i} style={s.row}>
-              <Text style={[s.cell, s.tick]}>{h.done ? "[x]" : "[ ]"}</Text>
-              <Text style={{ flex: 6 }}>{h.label}</Text>
-            </View>
-          ))}
-        </View>
+        {has("handover") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Analyst Handover</Text>
+            {data.handover.map((h, i) => (
+              <View key={i} style={s.row}>
+                <Text style={[s.cell, s.tick]}>{h.done ? "[x]" : "[ ]"}</Text>
+                <Text style={{ flex: 6 }}>{h.label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Handover documents on file */}
-        <View style={s.section} wrap={false}>
-          <Text style={s.sectionTitle}>Handover Documents on File</Text>
-          {data.handoverDocs.length === 0 && (
-            <Text style={s.empty}>No handover documents attached.</Text>
-          )}
-          {data.handoverDocs.map((d, i) => (
-            <View key={i} style={s.row}>
-              <Text style={{ flex: 3, fontFamily: "Helvetica-Bold" }}>{d.type}</Text>
-              <Text style={{ flex: 4 }}>{d.title ?? ""}</Text>
-            </View>
-          ))}
-        </View>
+        {has("documents") && (
+          <View style={s.section} wrap={false}>
+            <Text style={s.sectionTitle}>Handover Documents on File</Text>
+            {data.handoverDocs.length === 0 && (
+              <Text style={s.empty}>No handover documents attached.</Text>
+            )}
+            {data.handoverDocs.map((d, i) => (
+              <View key={i} style={s.row}>
+                <Text style={{ flex: 3, fontFamily: "Helvetica-Bold" }}>{d.type}</Text>
+                <Text style={{ flex: 4 }}>{d.title ?? ""}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Site register */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Site Register</Text>
-          <Table
-            head={["Name", "Date", "In / Out", "Status"]}
-            rows={data.register.map((r) => [r.name, r.date, r.inOut, r.status])}
-          />
-        </View>
+        {has("register") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Site Register</Text>
+            <Table
+              head={["Name", "Date", "In / Out", "Status"]}
+              rows={data.register.map((r) => [r.name, r.date, r.inOut, r.status])}
+            />
+          </View>
+        )}
+
+        {/* RPE inspection records */}
+        {has("rpe") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>RPE Inspection Records</Text>
+            <Table
+              head={["Operative", "Date", "RPE worn", "Inspected", "Face-fit"]}
+              rows={data.rpe.map((r) => [r.name, r.date, r.rpe, r.inspected, r.faceFit])}
+            />
+          </View>
+        )}
 
         {/* Exposure */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Personal Exposure (4-hour TWA)</Text>
-          <Table
-            head={["Operative", "Date", "Task", "Detail", "4h TWA"]}
-            rows={data.exposure.map((e) => [e.name, e.date, e.task, e.detail, e.twa])}
-          />
-        </View>
+        {has("exposure") && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Personal Exposure (4-hour TWA)</Text>
+            <Table
+              head={["Operative", "Date", "Task", "Detail", "4h TWA"]}
+              rows={data.exposure.map((e) => [e.name, e.date, e.task, e.detail, e.twa])}
+            />
+          </View>
+        )}
 
         {/* Plant checks */}
-        <View style={s.section} wrap={false}>
-          <Text style={s.sectionTitle}>Plant Checks</Text>
-          <Table
-            head={["Asset", "Date", "Check"]}
-            rows={data.plantChecks.map((c) => [c.asset, c.date, c.kind])}
-          />
-        </View>
+        {has("plant") && (
+          <View style={s.section} wrap={false}>
+            <Text style={s.sectionTitle}>Plant Checks</Text>
+            <Table
+              head={["Asset", "Date", "Check"]}
+              rows={data.plantChecks.map((c) => [c.asset, c.date, c.kind])}
+            />
+          </View>
+        )}
 
         {/* Air monitoring */}
-        <View style={s.section} wrap={false}>
-          <Text style={s.sectionTitle}>Air Monitoring</Text>
-          <Table
-            head={["Type", "Result", "Outcome", "Date"]}
-            rows={data.air.map((a) => [a.type, a.result, a.status, a.date])}
-          />
-        </View>
+        {has("air") && (
+          <View style={s.section} wrap={false}>
+            <Text style={s.sectionTitle}>Air Monitoring</Text>
+            <Table
+              head={["Type", "Result", "Outcome", "Date"]}
+              rows={data.air.map((a) => [a.type, a.result, a.status, a.date])}
+            />
+          </View>
+        )}
 
         {/* Client satisfaction */}
-        <View style={s.section} wrap={false}>
-          <Text style={s.sectionTitle}>Client Satisfaction</Text>
-          <Meta label="Rating" value={data.rating} />
-          {data.comments ? <Meta label="Comments" value={data.comments} /> : null}
-        </View>
+        {has("feedback") && (
+          <View style={s.section} wrap={false}>
+            <Text style={s.sectionTitle}>Client Satisfaction</Text>
+            <Meta label="Rating" value={data.rating} />
+            {data.comments ? <Meta label="Comments" value={data.comments} /> : null}
+          </View>
+        )}
 
         <Text style={s.footer} fixed>
           {data.companyName} · Compliance record retained under CAR 2012 Reg 19 ·
