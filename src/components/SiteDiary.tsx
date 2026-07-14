@@ -16,6 +16,8 @@ export interface DiaryEntry {
   note: string;
   authorName: string | null;
   createdAt: string;
+  attachmentUrl: string | null;
+  attachmentType: string | null;
 }
 
 export interface DiaryStaff {
@@ -48,6 +50,7 @@ export function SiteDiary({
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
 
   const staffName = new Map(staff.map((s) => [s.id, s.name]));
   const queued = useOutbox(projectId, ["site_log"]);
@@ -83,6 +86,7 @@ export function SiteDiary({
         if (res?.error) setError(res.error);
         else {
           setOpen(false);
+          setFileName("");
           router.refresh();
         }
       } catch {
@@ -133,11 +137,27 @@ export function SiteDiary({
               ))}
             </select>
           </div>
+          <div>
+            <label className="label">Photo or PDF (optional)</label>
+            <label className="btn-secondary w-full cursor-pointer text-center">
+              {fileName || "📷 Take photo / attach PDF"}
+              <input
+                type="file"
+                name="attachment"
+                accept="image/*,application/pdf"
+                className="sr-only"
+                onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+              />
+            </label>
+            <p className="mt-1 text-xs text-ink-faint">
+              Camera, gallery or a PDF · up to 15MB. Needs a connection to upload.
+            </p>
+          </div>
           {error && (
             <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm font-medium text-danger-700">{error}</p>
           )}
           <div className="flex gap-2">
-            <button type="button" onClick={() => { setOpen(false); setError(null); }} className="btn-secondary flex-1">Cancel</button>
+            <button type="button" onClick={() => { setOpen(false); setError(null); setFileName(""); }} className="btn-secondary flex-1">Cancel</button>
             <button type="submit" disabled={pending} className="btn-primary flex-1">
               {pending ? "Saving…" : "Save entry"}
             </button>
@@ -177,6 +197,26 @@ export function SiteDiary({
               </span>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-sm text-ink-muted">{e.note}</p>
+            {e.attachmentUrl &&
+              (e.attachmentType?.startsWith("image/") ? (
+                <a href={e.attachmentUrl} target="_blank" rel="noopener" className="mt-2 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={e.attachmentUrl}
+                    alt="Site photo"
+                    className="max-h-48 w-auto rounded-lg border border-surface-border"
+                  />
+                </a>
+              ) : (
+                <a
+                  href={e.attachmentUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-accent-700"
+                >
+                  📄 View PDF
+                </a>
+              ))}
             {e.authorName && (
               <p className="mt-1 text-xs text-ink-faint">— {e.authorName}</p>
             )}

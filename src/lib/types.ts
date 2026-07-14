@@ -265,6 +265,8 @@ export interface SiteLog {
   author_staff_id: string | null;
   category: string | null;
   note: string;
+  attachment_path: string | null;
+  attachment_type: string | null;
   created_at: string;
 }
 

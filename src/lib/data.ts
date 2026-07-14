@@ -407,3 +407,16 @@ export async function signPlanUrl(path: string | null): Promise<string | null> {
   const { data } = await supabase.storage.from("plans").createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
 }
+
+/** A short-lived signed URL for a file in the private "attachments" bucket. */
+export async function signAttachmentUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  if (ADMIN_ENABLED) {
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from("attachments").createSignedUrl(path, 3600);
+    if (data?.signedUrl) return data.signedUrl;
+  }
+  const supabase = createClient();
+  const { data } = await supabase.storage.from("attachments").createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
+}
