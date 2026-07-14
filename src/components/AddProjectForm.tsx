@@ -157,16 +157,15 @@ export function AddProjectForm({
 
         <p className="text-xs text-ink-muted">
           {classification === "licensed"
-            ? "Licensed work requires an ASB5 notification (≥14 days before start) and RAMS."
+            ? "Licensed work requires an ASB5 notification and RAMS. Record the ASB5 date when you have it — it won't block setup."
             : `${CLASSIFICATION_LABEL[classification]} work requires RAMS.`}
         </p>
 
         {classification === "licensed" && (
           <Field
             name="asb5_notification_date"
-            label="ASB5 notification date"
+            label="ASB5 notification date (optional)"
             type="date"
-            required
             defaultValue={dateVal(initial?.asb5_notification_date ?? null)}
           />
         )}
