@@ -17,6 +17,7 @@ import {
   getProjectStaff,
   getMyContext,
   signPlanUrl,
+  signAttachmentUrl,
   staffNameMap,
 } from "@/lib/data";
 import { SiteRegister, type RegisterRow, type AvailableStaff } from "@/components/SiteRegister";
@@ -145,14 +146,18 @@ export default async function ProjectWorkspacePage({
     checkedToday: checkedTodayIds.has(p.id),
   }));
   // Site diary + visitors
-  const diaryEntries: DiaryEntry[] = siteLog.map((e) => ({
-    id: e.id,
-    logDate: e.log_date,
-    category: e.category,
-    note: e.note,
-    authorName: e.author_staff_id ? names.get(e.author_staff_id) ?? null : null,
-    createdAt: e.created_at,
-  }));
+  const diaryEntries: DiaryEntry[] = await Promise.all(
+    siteLog.map(async (e) => ({
+      id: e.id,
+      logDate: e.log_date,
+      category: e.category,
+      note: e.note,
+      authorName: e.author_staff_id ? names.get(e.author_staff_id) ?? null : null,
+      createdAt: e.created_at,
+      attachmentUrl: await signAttachmentUrl(e.attachment_path),
+      attachmentType: e.attachment_type,
+    }))
+  );
   const visitorRows: VisitorRow[] = visitors.map((v) => ({
     id: v.id,
     name: v.name,
