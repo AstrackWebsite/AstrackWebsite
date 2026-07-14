@@ -69,12 +69,12 @@ export default function LoginPage() {
 
           <SubmitButton />
 
-          <button
-            type="button"
-            className="w-full text-center text-sm font-medium text-navy-500"
+          <a
+            href="/forgot-password"
+            className="block w-full text-center text-sm font-medium text-navy-500"
           >
             Forgot password?
-          </button>
+          </a>
         </form>
 
         <p className="mt-5 text-center text-sm text-navy-100">
