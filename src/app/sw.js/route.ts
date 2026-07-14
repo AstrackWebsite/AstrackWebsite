@@ -12,8 +12,10 @@ const SW = /* js */ `
 const STATIC_CACHE = "astrack-static-${BUILD_ID}";
 
 self.addEventListener("install", () => {
-  // Don't take over immediately — wait until the app tells us to, so we can
-  // show an "update available" prompt rather than swapping code mid-use.
+  // Activate the new version as soon as it's installed so devices never get
+  // stuck on stale code. The page decides *when* to reload onto it (deferred
+  // until the user isn't mid-edit), so this doesn't interrupt data entry.
+  self.skipWaiting();
 });
 
 self.addEventListener("message", (event) => {
