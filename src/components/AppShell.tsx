@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { NAV, type NavSection } from "@/lib/nav";
 import { BrandMark, AsTrackWordmark } from "./Brand";
 import { SyncStatus } from "./SyncStatus";
+import { CheckForUpdatesButton } from "./CheckForUpdatesButton";
 import { signOut } from "@/app/login/actions";
 
 export function AppShell({
@@ -164,14 +165,17 @@ export function AppShell({
             </div>
           )}
 
-          {/* Footer: user + sign out */}
-          <div className="border-t border-surface-border p-4">
-            <p className="mb-2 truncate text-sm text-ink-muted">{userEmail}</p>
-            <form action={signOut}>
-              <button type="submit" className="btn-secondary w-full">
-                Sign out
-              </button>
-            </form>
+          {/* Footer: update + user + sign out */}
+          <div className="space-y-3 border-t border-surface-border p-4">
+            <CheckForUpdatesButton />
+            <div>
+              <p className="mb-2 truncate text-sm text-ink-muted">{userEmail}</p>
+              <form action={signOut}>
+                <button type="submit" className="btn-secondary w-full">
+                  Sign out
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </nav>
