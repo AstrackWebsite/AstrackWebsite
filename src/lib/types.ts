@@ -131,6 +131,16 @@ export interface SiteRegisterEntry {
   created_at: string;
 }
 
+export interface CloseoutDocument {
+  id: string;
+  company_id: string;
+  project_id: string;
+  doc_type: string;
+  title: string | null;
+  file_path: string;
+  uploaded_at: string;
+}
+
 export interface StaffCertificate {
   id: string;
   company_id: string;

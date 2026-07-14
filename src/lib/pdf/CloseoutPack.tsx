@@ -25,6 +25,7 @@ export interface CloseoutData {
   };
   client: { name: string; contact: string; email: string } | null;
   handover: { label: string; done: boolean }[];
+  handoverDocs: { type: string; title: string | null }[];
   register: { name: string; date: string; inOut: string; status: string }[];
   exposure: { name: string; date: string; task: string; detail: string; twa: string }[];
   plantChecks: { asset: string; date: string; kind: string }[];
@@ -128,6 +129,20 @@ export function CloseoutPack({ data }: { data: CloseoutData }) {
             <View key={i} style={s.row}>
               <Text style={[s.cell, s.tick]}>{h.done ? "[x]" : "[ ]"}</Text>
               <Text style={{ flex: 6 }}>{h.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Handover documents on file */}
+        <View style={s.section} wrap={false}>
+          <Text style={s.sectionTitle}>Handover Documents on File</Text>
+          {data.handoverDocs.length === 0 && (
+            <Text style={s.empty}>No handover documents attached.</Text>
+          )}
+          {data.handoverDocs.map((d, i) => (
+            <View key={i} style={s.row}>
+              <Text style={{ flex: 3, fontFamily: "Helvetica-Bold" }}>{d.type}</Text>
+              <Text style={{ flex: 4 }}>{d.title ?? ""}</Text>
             </View>
           ))}
         </View>
