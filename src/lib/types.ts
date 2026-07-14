@@ -267,6 +267,8 @@ export interface WorkArea {
   location: string | null;
   task_activity: string | null;
   special_requirements: import("./enclosures").SpecialRequirements | null;
+  setup_checks: import("./enclosures").SetupCheck[] | null;
+  smoke_test: import("./enclosures").EnclosureSmokeTest | null;
   notes: string | null;
   plan_path: string | null;
   created_at: string;

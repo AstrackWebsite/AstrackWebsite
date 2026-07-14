@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import { addWorkArea } from "@/app/(app)/projects/work-area-actions";
 import {
   ENCLOSURE_REQUIREMENTS,
+  ENCLOSURE_SETUP_CHECKS,
   activeRequirements,
+  hasSmokeTest,
   type SpecialRequirements,
+  type SetupCheck,
+  type EnclosureSmokeTest,
 } from "@/lib/enclosures";
 
 export interface WorkAreaRow {
@@ -15,6 +19,8 @@ export interface WorkAreaRow {
   location: string | null;
   taskActivity: string | null;
   specialRequirements: SpecialRequirements | null;
+  setupChecks: SetupCheck[] | null;
+  smokeTest: EnclosureSmokeTest | null;
   notes: string | null;
   planUrl: string | null;
   hasPlan: boolean;
@@ -111,6 +117,54 @@ export function WorkAreas({
             </div>
           </fieldset>
 
+          <details className="rounded-lg border border-surface-border p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-ink">
+              Set-up &amp; smoke test (optional)
+            </summary>
+            <div className="mt-3 space-y-3">
+              <fieldset>
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  Set-up checks
+                </legend>
+                <div className="space-y-1">
+                  {ENCLOSURE_SETUP_CHECKS.map((label, i) => (
+                    <label key={i} className="flex cursor-pointer items-start gap-2 text-sm">
+                      <input type="checkbox" name={`setup_${i}`} className="mt-1 h-4 w-4" />
+                      <span className="text-ink">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label htmlFor="smoke_date" className="label">Smoke test date</label>
+                  <input id="smoke_date" name="smoke_date" type="date" className="field" />
+                </div>
+                <div>
+                  <label htmlFor="smoke_start" className="label">Start</label>
+                  <input id="smoke_start" name="smoke_start" type="time" className="field" />
+                </div>
+                <div>
+                  <label htmlFor="smoke_end" className="label">End</label>
+                  <input id="smoke_end" name="smoke_end" type="time" className="field" />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="smoke_witness" className="label">Witness</label>
+                <input id="smoke_witness" name="smoke_witness" className="field" placeholder="Client rep / analyst name" />
+              </div>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input type="checkbox" name="smoke_analyst_handover" className="h-4 w-4" />
+                <span className="text-ink">Analyst handover</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input type="checkbox" name="smoke_4sc" className="h-4 w-4" />
+                <span className="text-ink">4-stage clearance complete</span>
+              </label>
+            </div>
+          </details>
+
           <div>
             <label htmlFor="notes" className="label">Notes</label>
             <textarea id="notes" name="notes" rows={2} className="field" placeholder="Access, hazards…" />
@@ -171,6 +225,27 @@ export function WorkAreas({
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {a.setupChecks && a.setupChecks.length > 0 && (
+                    <p className="mt-2 text-xs text-ink-muted">
+                      Set-up checks: {a.setupChecks.filter((c) => c.checked).length}/
+                      {a.setupChecks.length} confirmed
+                    </p>
+                  )}
+                  {hasSmokeTest(a.smokeTest) && (
+                    <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-ink-muted">
+                      <span>
+                        Smoke test
+                        {a.smokeTest?.date ? ` ${a.smokeTest.date}` : ""}
+                        {a.smokeTest?.witness ? ` · witness ${a.smokeTest.witness}` : ""}
+                      </span>
+                      {a.smokeTest?.analystHandover && (
+                        <span className="pill pill-ok">Analyst handover</span>
+                      )}
+                      {a.smokeTest?.fourStageComplete && (
+                        <span className="pill pill-ok">4SC complete</span>
+                      )}
+                    </div>
                   )}
                   {a.notes && <p className="mt-2 whitespace-pre-wrap text-sm text-ink-muted">{a.notes}</p>}
                 </div>

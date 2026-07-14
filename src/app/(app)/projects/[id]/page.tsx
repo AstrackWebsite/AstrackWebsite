@@ -207,6 +207,8 @@ export default async function ProjectWorkspacePage({
       location: a.location,
       taskActivity: a.task_activity,
       specialRequirements: a.special_requirements,
+      setupChecks: a.setup_checks,
+      smokeTest: a.smoke_test,
       notes: a.notes,
       hasPlan: Boolean(a.plan_path),
       planUrl: await signPlanUrl(a.plan_path),

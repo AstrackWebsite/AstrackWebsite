@@ -6,7 +6,10 @@ import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
 import {
   ENCLOSURE_REQUIREMENTS,
+  ENCLOSURE_SETUP_CHECKS,
   type SpecialRequirements,
+  type SetupCheck,
+  type EnclosureSmokeTest,
 } from "@/lib/enclosures";
 
 const MAX_PLAN_BYTES = 15 * 1024 * 1024;
@@ -41,6 +44,28 @@ export async function addWorkArea(projectId: string, formData: FormData) {
     }
   }
   const hasReqs = Object.keys(special_requirements).length > 0;
+
+  // Set-up checks (10-point pre-smoke-test checklist) — only stored if any were
+  // ticked, so enclosures added without a smoke test stay clean.
+  const setupPicked: SetupCheck[] = ENCLOSURE_SETUP_CHECKS.map((label, i) => ({
+    label,
+    checked: formData.get(`setup_${i}`) === "on",
+  }));
+  const hasSetup = setupPicked.some((c) => c.checked);
+
+  // Smoke test / handover.
+  const smoke: EnclosureSmokeTest = {
+    date: String(formData.get("smoke_date") ?? "").trim(),
+    startTime: String(formData.get("smoke_start") ?? "").trim(),
+    endTime: String(formData.get("smoke_end") ?? "").trim(),
+    witness: String(formData.get("smoke_witness") ?? "").trim(),
+    analystHandover: formData.get("smoke_analyst_handover") === "on",
+    fourStageComplete: formData.get("smoke_4sc") === "on",
+  };
+  const hasSmoke =
+    Boolean(smoke.date || smoke.startTime || smoke.endTime || smoke.witness) ||
+    smoke.analystHandover ||
+    smoke.fourStageComplete;
 
   const supabase = createClient();
   const ctx = await getMyContext();
@@ -92,6 +117,8 @@ export async function addWorkArea(projectId: string, formData: FormData) {
     location,
     task_activity,
     special_requirements: hasReqs ? special_requirements : null,
+    setup_checks: hasSetup ? setupPicked : null,
+    smoke_test: hasSmoke ? smoke : null,
     notes,
     plan_path: planPath,
   });
