@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
+import {
+  ENCLOSURE_REQUIREMENTS,
+  type SpecialRequirements,
+} from "@/lib/enclosures";
 
 const MAX_PLAN_BYTES = 15 * 1024 * 1024;
 const PLAN_TYPES = new Set([
@@ -20,9 +24,23 @@ const PLAN_TYPES = new Set([
  */
 export async function addWorkArea(projectId: string, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Give the work area a name." };
+  if (!name) return { error: "Give the enclosure an ID." };
   const location = String(formData.get("location") ?? "").trim() || null;
+  const task_activity = String(formData.get("task_activity") ?? "").trim() || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
+
+  // Special requirements: a checkbox per requirement, each with an optional
+  // detail. Only ticked ones are stored.
+  const special_requirements: SpecialRequirements = {};
+  for (const r of ENCLOSURE_REQUIREMENTS) {
+    if (formData.get(`req_${r.key}`) === "on") {
+      special_requirements[r.key] = {
+        required: true,
+        detail: String(formData.get(`detail_${r.key}`) ?? "").trim(),
+      };
+    }
+  }
+  const hasReqs = Object.keys(special_requirements).length > 0;
 
   const supabase = createClient();
   const ctx = await getMyContext();
@@ -72,6 +90,8 @@ export async function addWorkArea(projectId: string, formData: FormData) {
     project_id: projectId,
     name,
     location,
+    task_activity,
+    special_requirements: hasReqs ? special_requirements : null,
     notes,
     plan_path: planPath,
   });

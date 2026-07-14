@@ -110,6 +110,8 @@ export interface Project {
   client_id: string | null;
   asb5_notification_date: string | null;
   rams_document_url: string | null;
+  rams_file_path: string | null;
+  rams_summary: string | null;
   contract_value: number | null;
   portal_token: string;
   portal_enabled: boolean;
@@ -263,6 +265,8 @@ export interface WorkArea {
   project_id: string;
   name: string;
   location: string | null;
+  task_activity: string | null;
+  special_requirements: import("./enclosures").SpecialRequirements | null;
   notes: string | null;
   plan_path: string | null;
   created_at: string;

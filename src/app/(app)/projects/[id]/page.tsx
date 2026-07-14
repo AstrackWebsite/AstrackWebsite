@@ -28,6 +28,7 @@ import { SiteDiary, type DiaryEntry } from "@/components/SiteDiary";
 import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
 import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
+import { RamsPanel } from "@/components/RamsPanel";
 import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
 import { SitePlant, type PlantOption } from "@/components/SitePlant";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -204,11 +205,15 @@ export default async function ProjectWorkspacePage({
       id: a.id,
       name: a.name,
       location: a.location,
+      taskActivity: a.task_activity,
+      specialRequirements: a.special_requirements,
       notes: a.notes,
       hasPlan: Boolean(a.plan_path),
       planUrl: await signPlanUrl(a.plan_path),
     }))
   );
+
+  const ramsFileUrl = office ? await signAttachmentUrl(project.rams_file_path) : null;
 
   const gatedPlant = plant.filter((p) => GATED_PLANT_TYPES.includes(p.type));
   const gate: PlantGate = {
@@ -289,6 +294,30 @@ export default async function ProjectWorkspacePage({
         {office && (
           <CollapsibleSection title="Site Team" summary={plural(teamMembers.length, "assigned")}>
             <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
+          </CollapsibleSection>
+        )}
+
+        {office && (
+          <CollapsibleSection
+            title="RAMS"
+            summary={
+              project.rams_file_path
+                ? project.rams_summary
+                  ? "Uploaded · summarised"
+                  : "Uploaded"
+                : project.rams_document_url
+                  ? "Reference on file"
+                  : "None yet"
+            }
+          >
+            <RamsPanel
+              projectId={project.id}
+              ramsLink={project.rams_document_url}
+              ramsFileUrl={ramsFileUrl}
+              hasFile={Boolean(project.rams_file_path)}
+              summary={project.rams_summary}
+              aiEnabled={AI_ENABLED}
+            />
           </CollapsibleSection>
         )}
 
