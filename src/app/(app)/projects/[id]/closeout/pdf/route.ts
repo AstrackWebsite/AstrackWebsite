@@ -17,6 +17,7 @@ import {
 } from "@/lib/data";
 import { CLOSEOUT_DOC_LABEL } from "@/lib/closeoutDocs";
 import { CloseoutPack, type CloseoutData } from "@/lib/pdf/CloseoutPack";
+import { mergeCloseoutDocs } from "@/lib/pdf/mergeCloseoutDocs";
 import {
   CLASSIFICATION_LABEL,
   PROJECT_STATUS_LABEL,
@@ -127,8 +128,11 @@ export async function GET(
   >[0];
   const buffer = await renderToBuffer(element);
 
+  // Fold every attached handover document into the single pack.
+  const merged = await mergeCloseoutDocs(new Uint8Array(buffer), handoverDocs);
+
   const slug = completed ? "closeout" : "report";
-  return new Response(new Uint8Array(buffer), {
+  return new Response(Buffer.from(merged), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${slug}-${project.reference}.pdf"`,
