@@ -16,6 +16,7 @@ export interface RamsFacts {
   address: string;
   reference: string;
   classification: string; // Licensed | Non-licensed (NNLW) | General
+  notificationForm: string | null; // ASB5 | ASBNNLW1 | null (not notifiable)
   asb5Date: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -29,7 +30,7 @@ Write a clear, professional first-draft RAMS in UK English as structured prose w
 1. Project & contractor details
 2. Scope of works
 3. Asbestos details (type, location, condition) — from the survey
-4. Legal status (licensed/notifiable, ASB5 / 14-day notification, plan of work)
+4. Legal status (licensed/notifiable, the relevant HSE notification — ASB5 for licensed work, ASBNNLW1 for notifiable non-licensed work — plan of work)
 5. Key hazards & risk assessment (asbestos fibres, work at height, manual handling, electrical, etc.) with control measures
 6. Method statement — sequential steps (set-up, enclosure & smoke test, controlled removal, cleaning, air monitoring, 4-stage clearance, dismantling)
 7. RPE & PPE
@@ -54,7 +55,7 @@ export function streamRams(facts: RamsFacts) {
     `Site address: ${facts.address}`,
     `Project reference: ${facts.reference}`,
     `Work classification: ${facts.classification}`,
-    `ASB5 / notification date: ${facts.asb5Date ?? "[INSERT if licensed]"}`,
+    `${facts.notificationForm ?? "Notification"} date: ${facts.asb5Date ?? (facts.notificationForm ? "[INSERT once notified]" : "not notifiable")}`,
     `Programme: ${facts.startDate ?? "[INSERT start]"} to ${facts.endDate ?? "[INSERT end]"}`,
     `Contracts manager: ${facts.contractsManager ?? "[INSERT]"}`,
     `Site supervisor: ${facts.supervisor ?? "[INSERT]"}`,
