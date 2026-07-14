@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, ADMIN_ENABLED } from "@/lib/supabase/admin";
 import { getMyContext } from "@/lib/data";
-import { isOfficeRole } from "@/lib/types";
 import { CLOSEOUT_DOC_TYPES } from "@/lib/closeoutDocs";
 
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -21,8 +20,8 @@ const ALLOWED = new Set([
 /** Attach a handover document (clearance cert, reoccupation cert, waste note…) to a project. */
 export async function uploadCloseoutDocument(projectId: string, formData: FormData) {
   const ctx = await getMyContext();
-  if (!ctx.user || !ctx.company || !isOfficeRole(ctx.profile?.app_role)) {
-    return { error: "Office access required." };
+  if (!ctx.user || !ctx.company) {
+    return { error: "Please sign in again." };
   }
 
   const docType = String(formData.get("doc_type") ?? "other");
