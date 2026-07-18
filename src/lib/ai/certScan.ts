@@ -16,10 +16,14 @@ export const CERT_FIELDS = [
   "asbestos_training_expiry",
   "medical_expiry",
   "face_fit_expiry",
+  "face_fit_ff_expiry",
   "mask_service_expiry",
   "smsts_expiry",
   "sssts_expiry",
   "cm_training_expiry",
+  "wah_expiry",
+  "pasma_expiry",
+  "ipaf_expiry",
 ] as const;
 
 export type CertField = (typeof CERT_FIELDS)[number];

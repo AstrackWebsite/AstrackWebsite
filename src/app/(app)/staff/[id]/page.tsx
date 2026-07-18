@@ -17,6 +17,10 @@ const CERTS: { key: keyof Staff; label: string }[] = [
   { key: "smsts_expiry", label: "SMSTS" },
   { key: "sssts_expiry", label: "SSSTS" },
   { key: "cm_training_expiry", label: "CM training" },
+  { key: "face_fit_ff_expiry", label: "Face fit (full face)" },
+  { key: "wah_expiry", label: "Work at height (WAH)" },
+  { key: "pasma_expiry", label: "PASMA" },
+  { key: "ipaf_expiry", label: "IPAF" },
 ];
 
 function CertStatusPill({ date }: { date: string }) {

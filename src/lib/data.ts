@@ -18,6 +18,11 @@ import type {
   ProjectCloseout,
   ProjectReport,
   Notification,
+  RpeInspection,
+  HavExposure,
+  AnemometerReading,
+  DcuInspection,
+  ToolboxTalk,
   Company,
   Profile,
   Incident,
@@ -359,6 +364,57 @@ export async function getIncident(id: string): Promise<Incident | null> {
 }
 
 // ── Closeout ───────────────────────────────────────────────────────────────
+// ── Site-diary logs ──────────────────────────────────────────────────────────
+export async function getRpeInspections(projectId: string): Promise<RpeInspection[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("rpe_inspection")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("inspection_date", { ascending: false });
+  return (data as RpeInspection[]) ?? [];
+}
+
+export async function getHavExposure(projectId: string): Promise<HavExposure[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("hav_exposure")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("entry_date", { ascending: false });
+  return (data as HavExposure[]) ?? [];
+}
+
+export async function getAnemometerReadings(projectId: string): Promise<AnemometerReading[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("anemometer_reading")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("reading_date", { ascending: false });
+  return (data as AnemometerReading[]) ?? [];
+}
+
+export async function getDcuInspections(projectId: string): Promise<DcuInspection[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("dcu_inspection")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("inspection_date", { ascending: false });
+  return (data as DcuInspection[]) ?? [];
+}
+
+export async function getToolboxTalks(projectId: string): Promise<ToolboxTalk[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("toolbox_talk")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("talk_date", { ascending: false });
+  return (data as ToolboxTalk[]) ?? [];
+}
+
 /** Recent office notifications (site activity), newest first. */
 export async function getNotifications(limit = 30): Promise<Notification[]> {
   const supabase = createClient();

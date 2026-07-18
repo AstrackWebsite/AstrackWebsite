@@ -17,6 +17,11 @@ import {
   getProjectStaff,
   getCloseout,
   getMyContext,
+  getRpeInspections,
+  getHavExposure,
+  getAnemometerReadings,
+  getDcuInspections,
+  getToolboxTalks,
   signPlanUrl,
   signAttachmentUrl,
   staffNameMap,
@@ -29,6 +34,13 @@ import { VisitorLog, type VisitorRow } from "@/components/VisitorLog";
 import { ShiftControl } from "@/components/ShiftControl";
 import { WorkAreas, type WorkAreaRow } from "@/components/WorkAreas";
 import { RamsPanel } from "@/components/RamsPanel";
+import {
+  RpeInspections,
+  HavExposureLog,
+  AnemometerLog,
+  DcuInspections,
+  ToolboxTalks,
+} from "@/components/DiarySections";
 import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
 import { SitePlant, type PlantOption } from "@/components/SitePlant";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -58,7 +70,8 @@ export default async function ProjectWorkspacePage({
   if (!project) notFound();
 
   const today = todayISO();
-  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx, closeout] =
+  const [staff, register, client, exposure, plant, allPlant, plantChecks, siteLog, visitors, shift, workAreas, team, ctx, closeout,
+    rpeInspections, havExposure, anemometerReadings, dcuInspections, toolboxTalks] =
     await Promise.all([
       getStaff(),
       getRegisterForDate(project.id, today),
@@ -74,6 +87,11 @@ export default async function ProjectWorkspacePage({
       getProjectStaff(project.id),
       getMyContext(),
       getCloseout(project.id),
+      getRpeInspections(project.id),
+      getHavExposure(project.id),
+      getAnemometerReadings(project.id),
+      getDcuInspections(project.id),
+      getToolboxTalks(project.id),
     ]);
 
   const names = staffNameMap(staff);
@@ -362,6 +380,41 @@ export default async function ProjectWorkspacePage({
             operatives={operatives}
             records={exposureRows}
           />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="HAV Exposure"
+          summary={havExposure.length ? plural(havExposure.length, "record") : "None yet"}
+        >
+          <HavExposureLog projectId={project.id} rows={havExposure} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Weekly RPE Inspections"
+          summary={rpeInspections.length ? plural(rpeInspections.length, "inspection") : "None yet"}
+        >
+          <RpeInspections projectId={project.id} rows={rpeInspections} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="DCU Inspections"
+          summary={dcuInspections.length ? plural(dcuInspections.length, "inspection") : "None yet"}
+        >
+          <DcuInspections projectId={project.id} rows={dcuInspections} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Anemometer Readings"
+          summary={anemometerReadings.length ? plural(anemometerReadings.length, "reading") : "None yet"}
+        >
+          <AnemometerLog projectId={project.id} rows={anemometerReadings} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Toolbox Talks"
+          summary={toolboxTalks.length ? plural(toolboxTalks.length, "talk") : "None yet"}
+        >
+          <ToolboxTalks projectId={project.id} rows={toolboxTalks} />
         </CollapsibleSection>
 
         <CollapsibleSection

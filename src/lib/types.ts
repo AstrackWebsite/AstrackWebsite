@@ -80,6 +80,10 @@ export interface Staff {
   smsts_expiry: string | null;
   sssts_expiry: string | null;
   cm_training_expiry: string | null;
+  wah_expiry: string | null;
+  pasma_expiry: string | null;
+  ipaf_expiry: string | null;
+  face_fit_ff_expiry: string | null;
   years_in_trade: number | null;
   archived: boolean;
   created_at: string;
@@ -311,6 +315,70 @@ export interface SiteVisitor {
   created_at: string;
 }
 
+export interface RpeInspection {
+  id: string;
+  project_id: string;
+  inspection_date: string;
+  employee_name: string | null;
+  mask_ref: string | null;
+  make_model: string | null;
+  passed: boolean;
+  comments: string | null;
+  inspector_name: string | null;
+  created_at: string;
+}
+
+export interface HavExposure {
+  id: string;
+  project_id: string;
+  entry_date: string;
+  tool: string | null;
+  start_time: string | null;
+  finish_time: string | null;
+  operative1: string | null;
+  duration1: string | null;
+  operative2: string | null;
+  duration2: string | null;
+  vibration_magnitude: number | null;
+  eav: string | null;
+  elv: string | null;
+  created_at: string;
+}
+
+export interface AnemometerReading {
+  id: string;
+  project_id: string;
+  reading_date: string;
+  npu_id: string | null;
+  npu_capacity: number | null;
+  points: number[] | null;
+  filter_face_m2: number | null;
+  average_velocity: number | null;
+  volume_m3: number | null;
+  created_at: string;
+}
+
+export interface DcuInspection {
+  id: string;
+  project_id: string;
+  inspection_date: string;
+  dcu_id: string | null;
+  checks: { label: string; checked: boolean }[] | null;
+  comments: string | null;
+  created_at: string;
+}
+
+export interface ToolboxTalk {
+  id: string;
+  project_id: string;
+  talk_date: string;
+  topic: string | null;
+  delivered_by: string | null;
+  attendees: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface Notification {
   id: string;
   company_id: string;
@@ -346,6 +414,11 @@ export interface ProjectCloseout {
   documentation_confirmed: boolean;
   client_rating: number | null;
   client_comments: string | null;
+  fb_sufficient_time: string | null;
+  fb_enough_persons: string | null;
+  fb_enough_materials: string | null;
+  fb_changes_made: string | null;
+  fb_improvements: string | null;
   closeout_pdf_url: string | null;
   submitted_for_review_at: string | null;
   completed_at: string | null;

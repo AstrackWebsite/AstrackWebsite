@@ -23,6 +23,10 @@ export const STAFF_FIELDS: Record<string, StaffField> = {
   smsts_expiry: { name: "smsts_expiry", label: "SMSTS expiry", type: "date" },
   sssts_expiry: { name: "sssts_expiry", label: "SSSTS expiry", type: "date" },
   cm_training_expiry: { name: "cm_training_expiry", label: "CM training expiry", type: "date" },
+  face_fit_ff_expiry: { name: "face_fit_ff_expiry", label: "Face fit (full face) expiry", type: "date" },
+  wah_expiry: { name: "wah_expiry", label: "Work at height (WAH) expiry", type: "date" },
+  pasma_expiry: { name: "pasma_expiry", label: "PASMA expiry", type: "date" },
+  ipaf_expiry: { name: "ipaf_expiry", label: "IPAF expiry", type: "date" },
   years_in_trade: { name: "years_in_trade", label: "Years in trade", type: "number" },
 };
 
@@ -48,7 +52,7 @@ export const STAFF_FORM_CONFIG: Record<StaffRole, RoleFormConfig> = {
       "mask_service_expiry",
       "contact",
     ],
-    optional: ["email"],
+    optional: ["face_fit_ff_expiry", "wah_expiry", "pasma_expiry", "ipaf_expiry", "email"],
   },
   site_supervisor: {
     mandatory: [
@@ -58,7 +62,7 @@ export const STAFF_FORM_CONFIG: Record<StaffRole, RoleFormConfig> = {
       "mask_service_expiry",
       "contact",
     ],
-    optional: ["sssts_expiry", "email"],
+    optional: ["sssts_expiry", "face_fit_ff_expiry", "wah_expiry", "pasma_expiry", "ipaf_expiry", "email"],
   },
   operative: {
     mandatory: [
@@ -67,7 +71,7 @@ export const STAFF_FORM_CONFIG: Record<StaffRole, RoleFormConfig> = {
       "face_fit_expiry",
       "mask_service_expiry",
     ],
-    optional: ["email", "years_in_trade", "contact"],
+    optional: ["face_fit_ff_expiry", "wah_expiry", "pasma_expiry", "ipaf_expiry", "email", "years_in_trade", "contact"],
   },
 };
 

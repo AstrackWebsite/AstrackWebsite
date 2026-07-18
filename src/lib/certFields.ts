@@ -9,4 +9,8 @@ export const CERT_FIELD_LABEL: Record<string, string> = {
   smsts_expiry: "SMSTS",
   sssts_expiry: "SSSTS",
   cm_training_expiry: "CM training",
+  face_fit_ff_expiry: "Face fit (full face)",
+  wah_expiry: "Work at height (WAH)",
+  pasma_expiry: "PASMA",
+  ipaf_expiry: "IPAF",
 };

@@ -55,6 +55,15 @@ export function CloseoutForm({
   });
   const [rating, setRating] = useState<number>(closeout?.client_rating ?? 0);
   const [comments, setComments] = useState<string>(closeout?.client_comments ?? "");
+  const [feedback, setFeedback] = useState({
+    fb_sufficient_time: closeout?.fb_sufficient_time ?? "",
+    fb_enough_persons: closeout?.fb_enough_persons ?? "",
+    fb_enough_materials: closeout?.fb_enough_materials ?? "",
+    fb_changes_made: closeout?.fb_changes_made ?? "",
+    fb_improvements: closeout?.fb_improvements ?? "",
+  });
+  const setFb = (k: keyof typeof feedback, v: string) =>
+    setFeedback((f) => ({ ...f, [k]: v }));
 
   const allHandover = HANDOVER.every((i) => flags[i.key as string]);
   const allSignoff = SIGNOFF.every((i) => flags[i.key as string]);
@@ -65,6 +74,7 @@ export function CloseoutForm({
     Object.entries(flags).forEach(([k, v]) => v && fd.set(k, "true"));
     fd.set("client_rating", String(rating));
     fd.set("client_comments", comments);
+    Object.entries(feedback).forEach(([k, v]) => fd.set(k, v));
     return fd;
   };
 
@@ -209,6 +219,39 @@ export function CloseoutForm({
           rows={3}
           className="field"
         />
+      </section>
+
+      <section className="card space-y-3 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
+          Project planning feedback
+        </h2>
+        {([
+          ["fb_sufficient_time", "Was sufficient time given on the project?"],
+          ["fb_enough_persons", "Were enough persons allocated?"],
+          ["fb_enough_materials", "Were enough materials allocated?"],
+          ["fb_changes_made", "Were any changes made on this project?"],
+        ] as const).map(([key, q]) => (
+          <div key={key}>
+            <label className="label">{q}</label>
+            <input
+              className="field"
+              disabled={completed}
+              value={feedback[key]}
+              onChange={(e) => setFb(key, e.target.value)}
+              placeholder="Yes / No — with any detail"
+            />
+          </div>
+        ))}
+        <div>
+          <label className="label">Overall comments for improvement</label>
+          <textarea
+            className="field"
+            rows={3}
+            disabled={completed}
+            value={feedback.fb_improvements}
+            onChange={(e) => setFb("fb_improvements", e.target.value)}
+          />
+        </div>
       </section>
 
       {error && (
