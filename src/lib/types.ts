@@ -84,6 +84,7 @@ export interface Staff {
   pasma_expiry: string | null;
   ipaf_expiry: string | null;
   face_fit_ff_expiry: string | null;
+  is_agency: boolean;
   years_in_trade: number | null;
   archived: boolean;
   created_at: string;

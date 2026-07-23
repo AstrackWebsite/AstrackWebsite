@@ -42,6 +42,7 @@ import {
   ToolboxTalks,
 } from "@/components/DiarySections";
 import { SiteTeam, type TeamMember } from "@/components/SiteTeam";
+import { AgencyWorkerAdd, type AgencyWorkerRow } from "@/components/AgencyWorkerAdd";
 import { SitePlant, type PlantOption } from "@/components/SitePlant";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { isOfficeRole } from "@/lib/types";
@@ -118,6 +119,10 @@ export default async function ProjectWorkspacePage({
   // The register only offers the project's assigned team.
   const teamIds = new Set(team.map((s) => s.id));
   const onRegister = new Set(register.map((e) => e.staff_id));
+  const agencyWorkers: AgencyWorkerRow[] = team
+    .filter((s) => s.is_agency)
+    .map((s) => ({ id: s.id, name: s.name, roleShort: STAFF_ROLE_SHORT[s.role] }));
+
   const available: AvailableStaff[] = team
     .filter((s) => !onRegister.has(s.id))
     .map((s) => {
@@ -191,6 +196,9 @@ export default async function ProjectWorkspacePage({
 
   const stillOnSite = register.filter((e) => e.check_in && !e.check_out && !e.blocked).length;
   const shiftState = shift ? { startedAt: shift.started_at, endedAt: shift.ended_at } : null;
+  // Site users can't touch anything in the project until they've started today's
+  // shift. The office/management always have access (they work off-site).
+  const workspaceUnlocked = office || Boolean(shiftState);
   const todayLogged = siteLog.some((e) => e.log_date === today);
   const plantCheckedToday = plant.filter((p) => checkedTodayIds.has(p.id)).length;
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -311,6 +319,16 @@ export default async function ProjectWorkspacePage({
           <ShiftControl projectId={project.id} shift={shiftState} stillOnSite={stillOnSite} />
         </CollapsibleSection>
 
+        {!workspaceUnlocked && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-center">
+            <p className="font-semibold text-amber-900">Start today&apos;s shift to begin</p>
+            <p className="mt-1 text-sm text-amber-800">
+              The register, logs and paperwork unlock once you start the shift above.
+            </p>
+          </div>
+        )}
+
+        {workspaceUnlocked && (<>
         {office && (
           <CollapsibleSection title="Site Team" summary={plural(teamMembers.length, "assigned")}>
             <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
@@ -347,6 +365,13 @@ export default async function ProjectWorkspacePage({
           summary={workAreaRows.length ? plural(workAreaRows.length, "enclosure") : "Add one"}
         >
           <WorkAreas projectId={project.id} areas={workAreaRows} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Agency Workers"
+          summary={agencyWorkers.length ? plural(agencyWorkers.length, "worker") : "Add one"}
+        >
+          <AgencyWorkerAdd projectId={project.id} workers={agencyWorkers} />
         </CollapsibleSection>
 
         <CollapsibleSection
@@ -468,6 +493,7 @@ export default async function ProjectWorkspacePage({
             </Link>
           );
         })()}
+        </>)}
       </div>
     </>
   );
