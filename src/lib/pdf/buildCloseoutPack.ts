@@ -28,6 +28,7 @@ import {
   ALL_SECTION_KEYS,
   type ReportSectionKey,
 } from "@/lib/closeoutSections";
+import { isOfficeRole } from "@/lib/types";
 
 export interface BuiltPack {
   bytes: Uint8Array;
@@ -97,7 +98,9 @@ export async function buildCloseoutPack(
       end: formatDate(project.end_date),
       asb5: project.asb5_notification_date ? formatDate(project.asb5_notification_date) : null,
       notificationForm: NOTIFICATION_FORM[project.classification] ?? "ASB5",
-      contractValue: gbp(project.contract_value),
+      contractValue: isOfficeRole(ctx.profile?.app_role)
+        ? gbp(project.contract_value)
+        : "—",
       cm: (project.contracts_manager_id && names.get(project.contracts_manager_id)) || "—",
       supervisor: (project.supervisor_id && names.get(project.supervisor_id)) || "—",
     },

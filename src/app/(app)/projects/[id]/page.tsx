@@ -265,7 +265,7 @@ export default async function ProjectWorkspacePage({
       <section className="card mb-4 p-4">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <Meta label="Client" value={client?.name} />
-          <Meta label="Contract value" value={gbp(project.contract_value)} />
+          {office && <Meta label="Contract value" value={gbp(project.contract_value)} />}
           <Meta
             label="Contracts manager"
             value={project.contracts_manager_id ? names.get(project.contracts_manager_id) : undefined}

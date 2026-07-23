@@ -97,7 +97,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-3">
         <KpiTile value={staff.length} label="Staff" href="/staff" />
         <KpiTile value={activeProjects.length} label="Projects" href="/projects" />
-        <KpiTile value={gbpCompact(projectValue)} label="Project value" tone="value" />
+        {isOffice && (
+          <KpiTile value={gbpCompact(projectValue)} label="Project value" tone="value" />
+        )}
         <KpiTile
           value={expiredCertStaff.length}
           label="Expired certs"
