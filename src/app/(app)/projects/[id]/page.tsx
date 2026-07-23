@@ -329,6 +329,107 @@ export default async function ProjectWorkspacePage({
         )}
 
         {workspaceUnlocked && (<>
+        <CollapsibleSection
+          title="Site Register · Today"
+          defaultOpen
+          summary={stillOnSite > 0 ? `${stillOnSite} on site` : "No one signed in"}
+        >
+          <SiteRegister projectId={project.id} rows={rows} available={available} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Agency Workers"
+          summary={agencyWorkers.length ? plural(agencyWorkers.length, "worker") : "Add one"}
+        >
+          <AgencyWorkerAdd projectId={project.id} workers={agencyWorkers} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="DCU Inspections"
+          summary={dcuInspections.length ? plural(dcuInspections.length, "inspection") : "None yet"}
+        >
+          <DcuInspections projectId={project.id} rows={dcuInspections} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Weekly RPE Inspections"
+          summary={rpeInspections.length ? plural(rpeInspections.length, "inspection") : "None yet"}
+        >
+          <RpeInspections projectId={project.id} rows={rpeInspections} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Plant & Equipment"
+          summary={plant.length ? `${plantCheckedToday}/${plant.length} checked today` : "None assigned"}
+        >
+          {office && (
+            <SitePlant
+              projectId={project.id}
+              assigned={assignedPlantOptions}
+              addable={addablePlantOptions}
+            />
+          )}
+          <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Enclosures & Work Areas"
+          summary={workAreaRows.length ? plural(workAreaRows.length, "enclosure") : "Add one"}
+        >
+          <WorkAreas projectId={project.id} areas={workAreaRows} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Anemometer Readings"
+          summary={anemometerReadings.length ? plural(anemometerReadings.length, "reading") : "None yet"}
+        >
+          <AnemometerLog projectId={project.id} rows={anemometerReadings} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Exposure Log"
+          summary={exposureRows.length ? plural(exposureRows.length, "record") : "None yet"}
+        >
+          <ExposureCapture
+            projectId={project.id}
+            operatives={operatives}
+            records={exposureRows}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="HAV Exposure"
+          summary={havExposure.length ? plural(havExposure.length, "record") : "None yet"}
+        >
+          <HavExposureLog projectId={project.id} rows={havExposure} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Site Diary"
+          summary={todayLogged ? plural(diaryEntries.length, "entry").replace("entrys", "entries") : "⚠ No log for today"}
+        >
+          <SiteDiary
+            projectId={project.id}
+            entries={diaryEntries}
+            staff={staff.map((s) => ({ id: s.id, name: s.name }))}
+            todayISO={today}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Visitors"
+          summary={visitorRows.length ? plural(visitorRows.length, "logged") : "None logged"}
+        >
+          <VisitorLog projectId={project.id} visitors={visitorRows} />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Toolbox Talks"
+          summary={toolboxTalks.length ? plural(toolboxTalks.length, "talk") : "None yet"}
+        >
+          <ToolboxTalks projectId={project.id} rows={toolboxTalks} />
+        </CollapsibleSection>
+
         {office && (
           <CollapsibleSection title="Site Team" summary={plural(teamMembers.length, "assigned")}>
             <SiteTeam projectId={project.id} team={teamMembers} addable={addableStaff} />
@@ -358,108 +459,6 @@ export default async function ProjectWorkspacePage({
             />
           </CollapsibleSection>
         )}
-
-        <CollapsibleSection
-          title="Enclosures & Work Areas"
-          defaultOpen
-          summary={workAreaRows.length ? plural(workAreaRows.length, "enclosure") : "Add one"}
-        >
-          <WorkAreas projectId={project.id} areas={workAreaRows} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Agency Workers"
-          summary={agencyWorkers.length ? plural(agencyWorkers.length, "worker") : "Add one"}
-        >
-          <AgencyWorkerAdd projectId={project.id} workers={agencyWorkers} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Site Register · Today"
-          defaultOpen
-          summary={stillOnSite > 0 ? `${stillOnSite} on site` : "No one signed in"}
-        >
-          <SiteRegister projectId={project.id} rows={rows} available={available} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Plant & Equipment"
-          summary={plant.length ? `${plantCheckedToday}/${plant.length} checked today` : "None assigned"}
-        >
-          {office && (
-            <SitePlant
-              projectId={project.id}
-              assigned={assignedPlantOptions}
-              addable={addablePlantOptions}
-            />
-          )}
-          <PlantChecks projectId={project.id} plant={plantRows} gate={gate} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Exposure Log"
-          summary={exposureRows.length ? plural(exposureRows.length, "record") : "None yet"}
-        >
-          <ExposureCapture
-            projectId={project.id}
-            operatives={operatives}
-            records={exposureRows}
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="HAV Exposure"
-          summary={havExposure.length ? plural(havExposure.length, "record") : "None yet"}
-        >
-          <HavExposureLog projectId={project.id} rows={havExposure} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Weekly RPE Inspections"
-          summary={rpeInspections.length ? plural(rpeInspections.length, "inspection") : "None yet"}
-        >
-          <RpeInspections projectId={project.id} rows={rpeInspections} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="DCU Inspections"
-          summary={dcuInspections.length ? plural(dcuInspections.length, "inspection") : "None yet"}
-        >
-          <DcuInspections projectId={project.id} rows={dcuInspections} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Anemometer Readings"
-          summary={anemometerReadings.length ? plural(anemometerReadings.length, "reading") : "None yet"}
-        >
-          <AnemometerLog projectId={project.id} rows={anemometerReadings} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Toolbox Talks"
-          summary={toolboxTalks.length ? plural(toolboxTalks.length, "talk") : "None yet"}
-        >
-          <ToolboxTalks projectId={project.id} rows={toolboxTalks} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Site Diary"
-          summary={todayLogged ? plural(diaryEntries.length, "entry").replace("entrys", "entries") : "⚠ No log for today"}
-        >
-          <SiteDiary
-            projectId={project.id}
-            entries={diaryEntries}
-            staff={staff.map((s) => ({ id: s.id, name: s.name }))}
-            todayISO={today}
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Visitors"
-          summary={visitorRows.length ? plural(visitorRows.length, "logged") : "None logged"}
-        >
-          <VisitorLog projectId={project.id} visitors={visitorRows} />
-        </CollapsibleSection>
 
         {AI_ENABLED && (
           <RamsDrafter projectId={project.id} reference={project.reference} />
